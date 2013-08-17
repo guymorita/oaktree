@@ -22,4 +22,22 @@ describe('creates new user', function(){
       done();
     });
   });
+
+
+  it('should return status code 200 when a user provides a valid user/password combination', function(done){
+    request(oaktree.server)
+      .get('/user/login/bob/bobpass')
+      .end(function(err, res){
+        assert.equal(res.statusCode, "200");
+        done();
+    });
+  });
+  it('should return status code 401 when a user provides a invalid user/password combination', function(done){
+    request(oaktree.server)
+      .get('/user/login/bob/bobpassddd')
+      .end(function(err, res){
+        assert.equal(res.statusCode, "401");
+        done();
+    });
+  });
 });
