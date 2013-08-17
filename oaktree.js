@@ -16,8 +16,19 @@ exports.oaktree = function(){
       password: req.params.password
     };
     var user = new db.User(newbie);
-    user.save(function(){
-      res.send('saved');
+    user.save(function(err, item){
+      if(err) {
+        if(err.code === 11000) {
+          res.status(400);
+          res.send('Duplicate username.');
+        } else {
+          res.send(err);
+        }
+      } else if(item) {
+        res.status(201);
+        item['password'] = undefined;
+        res.send(item);
+      }
     });
   };
 

@@ -3,7 +3,7 @@ exports.mongodb = function(){
   var mongoose = require('mongoose');
 
   var userSchema = mongoose.Schema({
-    name: String,
+    name: {type: String, index: { unique: true }},
     password: String
   });
 
