@@ -10,6 +10,7 @@ exports.oaktree = function(){
   }
 
   var newUser = function(req, res, next){
+    // create a user in the mongo db
     var newbie = {
       name: req.params.name,
       password: req.params.password
@@ -18,11 +19,30 @@ exports.oaktree = function(){
     user.save(function(){
       res.send('saved');
     });
-    // create a user in the mongo db
   };
 
   var loginUser = function(req, res, next){
-
+    var visitor = {
+      name: req.params.name,
+      password: req.params.password
+    };
+    db.User.findOne(visitor, function(err, item){
+      if(err) {
+        res.send(err);
+      } else {
+        var obj;
+        if(item) {
+          obj = item;
+          obj['password'] = undefined;
+          res.header('content-type', 'application/json');
+          res.status(200);
+        } else {
+          obj = 'Invalid username/password combination.';
+          res.status(401);
+        }
+        res.send(obj);
+      }
+    });
   };
 
   var confirmUser = function(req, res, next){
@@ -47,8 +67,9 @@ exports.oaktree = function(){
 
   var server = restify.createServer();
   server.get('/user/new/:name/:password', newUser);
-  server.get('/user/login/:name/:password', respond);
+  server.get('/user/login/:name/:password', loginUser);
   server.get('/user/confirm/:name/:password', retrieveAll);
+  server.get('/:name/:password', respond);
 
   server.post('/messages/send/:user_id', respond);
   server.get('/messages/retrieve/:user_id', respond);
