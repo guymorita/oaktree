@@ -80,7 +80,6 @@ exports.oaktree = function(){
   server.get('/user/new/:name/:password', newUser);
   server.get('/user/login/:name/:password', loginUser);
   server.get('/user/confirm/:name/:password', retrieveAll);
-  server.get('/:name/:password', respond);
 
   server.post('/messages/send/:user_id', respond);
   server.get('/messages/retrieve/:user_id', respond);
