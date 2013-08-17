@@ -22,7 +22,15 @@ describe('creates new user', function(){
       done();
     });
   });
-
+  it('should return an error code if a username already exists', function(done){
+    request(oaktree.server)
+      .get('/user/new/bob/bobpass22')
+      .end(function(err, res){
+        assert.equal(res.text, '"Duplicate username."');
+        assert.equal(res.statusCode, "400");
+        done();
+    });
+  });
 
   it('should return status code 200 when a user provides a valid user/password combination', function(done){
     request(oaktree.server)
