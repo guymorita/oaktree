@@ -65,6 +65,21 @@ exports.oaktree = function(){
     retrieveContacts();
   };
 
+  var newMessage = function(req, res, next){
+    var val = {
+      sender_id: req.params.sender_id,
+      receiver_id: req.params.receiver_id,
+      message_body: req.params.message_body
+    };
+    var message = new db.Message(val);
+    message.save(function(err, item){
+      if(item){
+        res.status(201);
+        res.send(item);
+      }
+    });
+  };
+
   var retrieveMessages = function(req, res, next){
 
   };
@@ -79,11 +94,11 @@ exports.oaktree = function(){
   var server = restify.createServer();
   server.get('/user/new/:name/:password', newUser);
   server.get('/user/login/:name/:password', loginUser);
-  server.get('/user/confirm/:name/:password', retrieveAll);
+  //server.get('/user/confirm/:name/:password', confirmUser);
 
-  server.post('/messages/send/:user_id', respond);
-  server.get('/messages/retrieve/:user_id', respond);
-  server.get('/messages/read/:user_id/:message_id', respond);
+  server.get('/message/send/:sender_id/:receiver_id/:message_body', newMessage);
+  server.get('/message/retrieve/:user_id', respond);
+  server.get('/message/read/:user_id/:message_id', respond);
   // server.head('/hello/:name', respond);
 
   server.listen(8080, function() {
@@ -92,6 +107,7 @@ exports.oaktree = function(){
 
   return {
     server: server,
-    User: db.User
+    User: db.User,
+    Message: db.Message
   };
 };
