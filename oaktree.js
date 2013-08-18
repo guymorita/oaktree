@@ -11,9 +11,13 @@ exports.oaktree = function(){
 
   var newUser = function(req, res, next){
     // create a user in the mongo db
+
+    var code = req.params.name.substring(0,1) + '' + Math.floor(Math.random()*Date.now());
+
     var newbie = {
       name: req.params.name,
-      password: req.params.password
+      password: req.params.password,
+      confirm_code: code
     };
     var user = new db.User(newbie);
     user.save(function(err, item){
@@ -94,21 +98,22 @@ exports.oaktree = function(){
   };
 
   var readMessages = function(req, res, next) {
-
+    var val = { _id: req.params.message_id };
+    db.Message.update(val, {$set: {status: 1}}, function(err, count, third) {
+      if(count === 1) {
+        res.status(201);
+        res.send("Message read.");
+      }
+    });
   };
-
-
-
 
   var server = restify.createServer();
   server.get('/user/new/:name/:password', newUser);
   server.get('/user/login/:name/:password', loginUser);
-  //server.get('/user/confirm/:name/:password', confirmUser);
 
   server.get('/message/send/:sender_id/:receiver_id/:message_body', newMessage);
   server.get('/message/retrieve/:user_id', retrieveMessages);
-  server.get('/message/read/:user_id/:message_id', respond);
-  // server.head('/hello/:name', respond);
+  server.get('/message/read/:message_id', readMessages);
 
   server.listen(8080, function() {
     console.log('%s listening at %s', server.name, server.url);

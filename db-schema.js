@@ -4,7 +4,11 @@ exports.mongodb = function(){
 
   var userSchema = mongoose.Schema({
     name: {type: String, lowercase: true, trim: true, index: { unique: true }},
-    password: String
+    password: String,
+    confirm_code: String,
+    phone: Number,
+    contacts: Array,
+    messages: Array
   });
 
   var User = mongoose.model('User', userSchema);
