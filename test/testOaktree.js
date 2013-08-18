@@ -134,12 +134,13 @@ describe('Retrieve messages', function(){
           });
       });
   });
-  it('should retrieve messages.', function(done){
+  it('should retrieve messages for the user.', function(done){
     request(oaktree.server).get('/message/retrieve/555')
       .end(function(err, res){
         expect(res.body.length).to.eql(2);
         assert.equal(res.body[0]._id, message1_id);
         assert.equal(res.body[1]._id, message2_id);
+        assert.equal(res.body[1].receiver_id, 555);
         assert.notEqual(res.body[0]._id, message2_id);
         done();
       });
@@ -172,5 +173,47 @@ describe('Retrieve messages', function(){
             });
       }
     });
+  });
+});
+
+describe('Read messages', function(){
+  var message1_id, message2_id, message3_id;
+  beforeEach(function(done){
+    oaktree.Message.find().remove({});
+    request(oaktree.server).get('/message/send/132/555/helloworld')
+      .end(function(err, res){
+        message1_id = res.body._id;
+        request(oaktree.server).get('/message/send/111/555/helloworld2')
+          .end(function(err, res){
+            message2_id = res.body._id;
+            request(oaktree.server).get('/message/send/111/5/notfor555')
+              .end(function(err, res){
+                message3_id = res.body._id;
+                request(oaktree.server).get('/message/read/' + message1_id)
+                  .end(function(err, res){
+                    done();
+                  });
+              });
+          });
+      });
+  });
+  it('should mark the message as read.', function(done){
+    request(oaktree.server).get('/message/retrieve/555')
+      .end(function(err, res){
+        assert.equal(res.body[0]._id, message1_id);
+        assert.equal(res.body[0].status, 1);
+        assert.notEqual(res.body[0]._id, message2_id);
+        assert.notEqual(res.body[0].status, 0);
+        done();
+      });
+  });
+  it('should not affect message retrieval count.', function(done){
+    request(oaktree.server).get('/message/retrieve/555')
+      .end(function(err, res){
+        expect(res.body.length).to.eql(2);
+        assert.equal(res.body[0]._id, message1_id);
+        assert.equal(res.body[1]._id, message2_id);
+        done();
+      });
   });
 });
