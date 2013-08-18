@@ -23,7 +23,7 @@ exports.mongodb = function(){
     date: { type: Date, default: Date.now }
   });
 
-  var Message = mongoose.model('User', messageSchema);
+  var Message = mongoose.model('Message', messageSchema);
 
   return {
     User: User,
