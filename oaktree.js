@@ -81,7 +81,16 @@ exports.oaktree = function(){
   };
 
   var retrieveMessages = function(req, res, next){
-
+    var val = {
+      receiver_id: req.params.user_id,
+      cleared: false
+    };
+    db.Message.find(val, function(err, item){
+      if(item){
+        res.status(201);
+        res.send(item);
+      }
+    });
   };
 
   var readMessages = function(req, res, next) {
@@ -97,7 +106,7 @@ exports.oaktree = function(){
   //server.get('/user/confirm/:name/:password', confirmUser);
 
   server.get('/message/send/:sender_id/:receiver_id/:message_body', newMessage);
-  server.get('/message/retrieve/:user_id', respond);
+  server.get('/message/retrieve/:user_id', retrieveMessages);
   server.get('/message/read/:user_id/:message_id', respond);
   // server.head('/hello/:name', respond);
 
