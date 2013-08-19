@@ -1,7 +1,7 @@
 {
-  "engines": {
-    "node": "*"
-  },
+  "name": "oaktree",
+  "version": "0.1.0",
+  "description": "Squirrel server",
   "dependencies": {
     "restify": "*",
     "mongoose": "*",
@@ -9,6 +9,13 @@
   },
   "devDependencies": {
     "chai": "*",
+<<<<<<< HEAD
     "mocha": "*"
   }
 }
+=======
+    "mocha": "*" // our preference, but you can use any test runner you like
+  },
+  "engine": "node >= 0.8.0"
+}
+>>>>>>> 577615c634c39bd4770080e797e055ee8a2a67da
