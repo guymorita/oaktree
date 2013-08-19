@@ -3,10 +3,12 @@
     "node": "*"
   },
   "dependencies": {
-    "restify": "*"
+    "restify": "*",
+    "mongoose": "*",
+    "supertest": "~0.7.1"
   },
   "devDependencies": {
     "chai": "*",
-    "mocha": "*" // our preference, but you can use any test runner you like
+    "mocha": "*"
   }
 }
