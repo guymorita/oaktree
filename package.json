@@ -1,12 +1,12 @@
 {
-  "engines": {
-    "node": "*"
-  },
+  "name": "oaktree",
+  "description": "Squirrel server",
   "dependencies": {
     "restify": "*"
   },
   "devDependencies": {
     "chai": "*",
     "mocha": "*" // our preference, but you can use any test runner you like
-  }
+  },
+  "engine": "node >= 0.8.0"
 }
