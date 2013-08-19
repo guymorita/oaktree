@@ -5,8 +5,8 @@ exports.oaktree = function(){
   var mongoose = require('mongoose');
   mongoose.connect('mongodb://localhost/squirrel');
 
-  function respond(req, res, next) {
-    res.send('hello ' + req.params.name + req.params.password);
+  function defaultResponse(req, res, next) {
+    res.send('oaktree is ready for squirrel');
   }
 
   var newUser = function(req, res, next){
@@ -32,6 +32,7 @@ exports.oaktree = function(){
         res.status(201);
         item['password'] = undefined;
         res.send(item);
+        console.log("New user "+ req.params.name +" created");
       }
     });
   };
@@ -80,6 +81,7 @@ exports.oaktree = function(){
       if(item){
         res.status(201);
         res.send(item);
+        console.log("Message sent from "+ val.sender_id +" to "+ val.receiver_id);
       }
     });
   };
@@ -93,6 +95,7 @@ exports.oaktree = function(){
       if(item){
         res.status(201);
         res.send(item);
+        console.log("Retrieving messages for "+ val.receiver_id);
       }
     });
   };
@@ -108,6 +111,8 @@ exports.oaktree = function(){
   };
 
   var server = restify.createServer();
+  server.get('/', defaultResponse);
+
   server.get('/user/new/:name/:password', newUser);
   server.get('/user/login/:name/:password', loginUser);
 
