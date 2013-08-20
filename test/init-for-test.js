@@ -9,16 +9,22 @@ var makeUsers = function(cb) {
   var users = [];
   request(oaktree.server).get('/user/new/bob/bobpass')
     .end(function(err, res) {
-      users.push({id: res.body._id, name: 'bob'});
+      users.push({id: res.body._id, username: 'bob'});
       request(oaktree.server).get('/user/new/tom/tompass')
         .end(function(err, res) {
-          users.push({id: res.body._id, name: 'tom'});
+          users.push({id: res.body._id, username: 'tom'});
           request(oaktree.server).get('/user/new/sally/sallypass')
             .end(function(err, res) {
-              users.push({id: res.body._id, name: 'sally'});
-              console.log("users created");
-              cb(users);
-          });
+              users.push({id: res.body._id, username: 'sally'});
+              request(oaktree.server).get('/user/new/jill/jillpass')
+                .end(function(err, res) {
+                  users.push({id: res.body._id, username: 'jill'});
+                  oaktree.User.find({}, function(err, collection){
+                    console.log("users in db", collection);
+                    cb(users);
+                  });
+                });
+            });
         });
     });
 };
@@ -40,6 +46,29 @@ var makeMessages = function(users) {
                   request(oaktree.server).get('/message/send/' + u2_u0 + '/message_fromUser2toUser0')
                     .end(function(err, res){
                       console.log("messages sent");
+                      makeFriends(users);
+                    });
+                });
+            });
+        });
+    });
+};
+
+var makeFriends = function(users) {
+  request(oaktree.server).get('/friends/add/'+ users[0].id +'/'+ users[1].id)
+    .end(function(err, res) {
+      request(oaktree.server).get('/friends/accept/'+ users[0].id +'/'+ users[1].id)
+        .end(function(err, res) {
+          request(oaktree.server).get('/friends/add/'+ users[0].id +'/'+ users[2].id)
+            .end(function(err, res) {
+              request(oaktree.server).get('/friends/add/'+ users[0].id +'/'+ users[3].id)
+                .end(function(err, res) {
+                  request(oaktree.server).get('/friends/add/'+ users[1].id +'/'+ users[2].id)
+                    .end(function(err, res) {
+                      request(oaktree.server).get('/friends/accept/'+ users[1].id +'/'+ users[2].id)
+                        .end(function(err, res) {
+                          console.log("Friendships established");
+                        });
                     });
                 });
             });
