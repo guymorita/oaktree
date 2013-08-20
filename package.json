@@ -1,9 +1,10 @@
 {
   "name": "oaktree",
-  "version": "0.1.0-2",
+  "version": "0.1.0-6",
   "engine": "node >= 0.8.x",
   "description": "Squirrel server",
   "dependencies": {
+    "async": "*",
     "restify": "*",
     "mongoose": "*",
     "supertest": "0.7.x",
