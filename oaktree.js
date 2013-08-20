@@ -1,5 +1,6 @@
 exports.oaktree = function(){
   var restify = require('restify');
+  var _ = require('underscore');
   var db = require('./db-schema.js').mongodb();
 
   var mongoose = require('mongoose');
@@ -145,26 +146,39 @@ exports.oaktree = function(){
           receiver = collection[0];
         }
 
-        sender.friends.push({_id: receiver_id, status: 0, username: receiver.username});
-        receiver.friends.push({_id: sender_id, status: 1, username: sender.username});
-
-        senderFriends.friends = sender.friends;
-        receiverFriends.friends = receiver.friends;
-
-        db.User.update({_id:sender_id}, {$set: senderFriends}, function(err, count) {
-          if(count === 1){
-            //console.log(sender.username +' has sent a friend request.');
-            db.User.update({_id:receiver_id}, {$set: receiverFriends}, function(err, count) {
-              if(count === 1) {
-                //console.log(receiver.username +' has received a request.');
-                console.log(sender.username +' has sent '+ receiver.username +' a friend request.');
-                res.status(201);
-                // sends the sender an updated friends list
-                res.send(sender.friends);
-              }
-            });
-          }
+        var friendIndex = _.find(sender.friends, function(friend){
+          return (friend._id.toString() === receiver_id.toString());
         });
+
+        if(typeof friendIndex === 'undefined') {
+          sender.friends.push({_id: receiver_id, status: 0, username: receiver.username});
+          receiver.friends.push({_id: sender_id, status: 1, username: sender.username});
+
+          senderFriends.friends = sender.friends;
+          receiverFriends.friends = receiver.friends;
+
+          db.User.update({_id:sender_id}, {$set: senderFriends}, function(err, count) {
+            if(count === 1){
+              //console.log(sender.username +' has sent a friend request.');
+              db.User.update({_id:receiver_id}, {$set: receiverFriends}, function(err, count) {
+                if(count === 1) {
+                  //console.log(receiver.username +' has received a request.');
+                  console.log(sender.username +' has sent '+ receiver.username +' a friend request.');
+                  res.status(201);
+                  // sends the sender an updated friends list
+                  res.send(sender.friends);
+                }
+              });
+            }
+          });
+        } else {
+          var alreadyFriend = sender.friends[friendIndex];
+          if(alreadyFriend.status===1) {
+            res.send(alreadyFriend.username +' is already pending a friendship request.');
+          } else {
+            res.send(alreadyFriend.username +' is already a friend.');
+          }
+        }
       }
     });
   };
@@ -232,7 +246,7 @@ exports.oaktree = function(){
 
   server.get('/user', listUsers);
   server.get('/user/new/:username/:password', newUser);
-  server.get('/user/login/:name/:password', loginUser);
+  server.get('/user/login/:username/:password', loginUser);
 
   server.get('/message/send/:sender_id/:receiver_id/:message_body', newMessage);
   server.get('/message/retrieve/:user_id', retrieveMessages);
