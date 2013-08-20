@@ -5,6 +5,16 @@ exports.oaktree = function(){
   var mongoose = require('mongoose');
   mongoose.connect('mongodb://localhost/squirrel');
 
+  function _findAndPluck(array, field, match) {
+    var i;
+    for(i=0; i<array.length; i++) {
+      if(array[i][field].toString() === match.toString()) {
+        break;
+      }
+    }
+    return array.splice(i, 1);
+  }
+
   function defaultResponse(req, res, next) {
     res.send('oaktree is ready for squirrel');
   }
@@ -169,16 +179,6 @@ exports.oaktree = function(){
 
     var query = {_id: {$in: [sender_id, receiver_id]}};
 
-    function findAndPluck(array, id) {
-      var i;
-      for(i=0; i<array.length; i++) {
-        if(array[i]._id.toString() === id.toString()) {
-          break;
-        }
-      }
-      return array.splice(i, 1);
-    }
-
     db.User.find(query, function(err, collection){
       if(collection.length === 2) {
         if(collection[0]._id.toString() === sender_id.toString()) {
@@ -189,8 +189,8 @@ exports.oaktree = function(){
           receiver = collection[0];
         }
 
-        var rFriend = findAndPluck(sender.friends, receiver._id)[0];
-        var sFriend = findAndPluck(receiver.friends, sender._id)[0];
+        var rFriend = _findAndPluck(sender.friends, '_id', receiver._id)[0];
+        var sFriend = _findAndPluck(receiver.friends, '_id', sender._id)[0];
 
         rFriend.status = 2;
         sFriend.status = 2;
