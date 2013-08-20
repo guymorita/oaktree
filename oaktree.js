@@ -168,10 +168,8 @@ exports.oaktree = function(){
   var addFriend = function(req, res, next) {
     var sender_id = req.params.sender_id,
         receiver_id = req.params.receiver_id,
-        sender = {},
-        receiver = {},
-        senderFriends = {},
-        receiverFriends = {};
+        senderObject = {},
+        receiverObject = {};
 
     var query = {_id: {$in: [sender_id, receiver_id]}};
 
@@ -184,13 +182,13 @@ exports.oaktree = function(){
         sender.friends.push({_id: receiver_id, status: 0, username: receiver.username});
         receiver.friends.push({_id: sender_id, status: 1, username: sender.username});
 
-        senderFriends.friends = sender.friends;
-        receiverFriends.friends = receiver.friends;
+        senderObject.friends = sender.friends;
+        receiverObject.friends = receiver.friends;
 
-        db.User.update({_id:sender_id}, {$set: senderFriends}, function(err, count) {
+        db.User.update({_id:sender_id}, {$set: senderObject}, function(err, count) {
           if(count === 1){
             //console.log(sender.username +' has sent a friend request.');
-            db.User.update({_id:receiver_id}, {$set: receiverFriends}, function(err, count) {
+            db.User.update({_id:receiver_id}, {$set: receiverObject}, function(err, count) {
               if(count === 1) {
                 //console.log(receiver.username +' has received a request.');
                 console.log(sender.username +' has sent '+ receiver.username +' a friend request.');
@@ -214,10 +212,8 @@ exports.oaktree = function(){
   var acceptFriend = function(req, res, next) {
     var sender_id = req.params.sender_id,
         receiver_id = req.params.receiver_id,
-        sender = {},
-        receiver = {},
-        senderFriends = {},
-        receiverFriends = {};
+        senderObject = {},
+        receiverObject = {};
 
     var query = {_id: {$in: [sender_id, receiver_id]}};
 
@@ -232,12 +228,12 @@ exports.oaktree = function(){
       sender.friends.push(rFriend);
       receiver.friends.push(sFriend);
 
-      senderFriends.friends = sender.friends;
-      receiverFriends.friends = receiver.friends;
+      senderObject.friends = sender.friends;
+      receiverObject.friends = receiver.friends;
 
-      db.User.update({_id:sender_id}, {$set: senderFriends}, function(err, count) {
+      db.User.update({_id:sender_id}, {$set: senderObject}, function(err, count) {
         if(count === 1){
-          db.User.update({_id:receiver_id}, {$set: receiverFriends}, function(err, count) {
+          db.User.update({_id:receiver_id}, {$set: receiverObject}, function(err, count) {
             if(count === 1) {
               res.status(201);
               res.send('Friendship made for '+ sender.username +' and '+ receiver.username);
