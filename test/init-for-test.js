@@ -30,27 +30,22 @@ var makeUsers = function(cb) {
 };
 
 var makeMessages = function(users) {
-  var u0_u1 = users[0].id + '/'+ users[1].id;
-  var u0_u2 = users[0].id + '/'+ users[2].id;
-  var u1_u0 = users[1].id + '/'+ users[0].id;
-  var u1_u2 = users[1].id + '/'+ users[2].id;
-  var u2_u0 = users[2].id + '/'+ users[0].id;
-  request(oaktree.server).get('/message/send/' + u0_u1 + '/message_fromUser0toUser1')
+  var message = {
+    sender_id: users[0].id,
+    receiver_ids: [users[1].id,users[2].id],
+    content: "omfg",
+    title: "hello title"
+  };
+  console.log('sending message');
+
+  request(oaktree.server).post('/message')
+    // .set('Content-Type', 'application/json')
+    .send(JSON.stringify(message))
     .end(function(err, res){
-      request(oaktree.server).get('/message/send/' + u0_u2 + '/message_fromUser0toUser2')
-        .end(function(err, res){
-          request(oaktree.server).get('/message/send/' + u1_u0 + '/message_fromUser1toUser0')
-            .end(function(err, res){
-              request(oaktree.server).get('/message/send/' + u1_u2 + '/message_fromUser1toUser2')
-                .end(function(err, res){
-                  request(oaktree.server).get('/message/send/' + u2_u0 + '/message_fromUser2toUser0')
-                    .end(function(err, res){
-                      console.log("messages sent");
-                      makeFriends(users);
-                    });
-                });
-            });
-        });
+      if (err) {
+        throw new err();
+      }
+      console.log("message sent, err ", res);
     });
 };
 

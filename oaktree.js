@@ -112,38 +112,32 @@ exports.oaktree = function(){
   };
 
   var newMessage = function(req, res, next){
-    console.log("yay!");
     var stream = '';
+
     req.on('data', function(chunk){
       stream += chunk;
     });
 
     req.on('end', function(){
-      console.log("msg", stream);
       var message = JSON.parse(stream);
 
-      var sender_id = message.sender_id;
-      var receiver_ids = message.receiver_ids;
+      var receiver_ids = message.receiver_ids.slice();
+      delete message['receiver_ids'];
 
-      delete message[receiver_ids];
-
-      console.log("deleted receiver ids", message);
-
+        // called as a iterator for async.each below
       function saveMessage(receiver_id) {
         message.receiver_id = receiver_id;
 
-        console.log("message w/ receiver ", message);
+        console.log("message sent to receiver ", message);
         var messagedb = new db.Message(message);
-        messagedb.save(function(err, item){
-          if(item) {
-            console.log("message sent to "+ receiver_id);
-          }
-        });
+        messagedb.save();
       }
 
       async.each(receiver_ids, saveMessage, function(err){
-        console.log("all messages sent!");
+        console.log("called back.");
         if(err) {console.log(err);}
+        console.log("all messages sent!");
+        res.send("message sent");
       });
     });
   };
@@ -260,9 +254,14 @@ exports.oaktree = function(){
     });
   };
 
+  // var optionsRequest = function(req, res, next){
+  //   console.log('req body', req.body);
+  // };
+
   var server = restify.createServer();
   server.use(restify.CORS());
   server.use(restify.fullResponse());
+  //server.use(restify.bodyParser({mapParams:false}));
 
   server.get('/', defaultResponse);
 
@@ -270,7 +269,12 @@ exports.oaktree = function(){
   server.get('/user/new/:username/:password', newUser);
   server.get('/user/login/:username/:password', loginUser);
 
-  server.post('/message/', newMessage);
+  server.post('/message', newMessage);
+  server.opts(/\.*/, function (req, res, next) {
+    console.log('req body', req.body);
+    res.send(200);
+    next();
+  });
   server.get('/message/PRISM', showMessages);
   server.get('/message/retrieve/:user_id', retrieveMessages);
   server.get('/message/read/:message_id', readMessages);
