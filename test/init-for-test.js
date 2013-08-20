@@ -36,16 +36,15 @@ var makeMessages = function(users) {
     content: "omfg",
     title: "hello title"
   };
-  console.log('sending message');
 
   request(oaktree.server).post('/message')
     // .set('Content-Type', 'application/json')
     .send(JSON.stringify(message))
     .end(function(err, res){
       if (err) {
+        console.log("post err", err);
         throw new err();
       }
-      console.log("message sent, err ", res);
     });
 };
 

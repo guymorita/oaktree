@@ -125,16 +125,19 @@ exports.oaktree = function(){
       delete message['receiver_ids'];
 
         // called as a iterator for async.each below
-      function saveMessage(receiver_id) {
+      function saveMessage(receiver_id, callback) {
         message.receiver_id = receiver_id;
 
-        console.log("message sent to receiver ", message);
         var messagedb = new db.Message(message);
-        messagedb.save();
+        messagedb.save(function(err, item){
+          if(item) {
+            console.log("message sent to receiver ", item);
+            callback();
+          }
+        });
       }
 
       async.each(receiver_ids, saveMessage, function(err){
-        console.log("called back.");
         if(err) {console.log(err);}
         console.log("all messages sent!");
         res.send("message sent");
