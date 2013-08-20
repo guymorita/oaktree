@@ -9,12 +9,18 @@ exports.oaktree = function(){
     res.send('oaktree is ready for squirrel');
   }
 
+  var listUsers = function(req, res, next){
+    db.User.find({}, function(err, collection){
+      res.send(collection);
+    });
+  };
+
   var newUser = function(req, res, next){
     // create a user in the mongo db
-    var code = req.params.name.substring(0,1) + '' + Math.floor(Math.random()*Date.now());
+    var code = req.params.username.substring(0,1) + '' + Math.floor(Math.random()*Date.now());
 
     var newbie = {
-      name: req.params.name,
+      username: req.params.username,
       password: req.params.password,
       confirm_code: code
     };
@@ -28,18 +34,17 @@ exports.oaktree = function(){
           res.send(err);
         }
       } else if(item) {
-        console.log('user saved');
         res.status(201);
         item['password'] = undefined;
         res.send(item);
-        console.log("New user "+ req.params.name +" created");
+        console.log("New user "+ req.params.username +" created");
       }
     });
   };
 
   var loginUser = function(req, res, next){
     var visitor = {
-      name: req.params.name,
+      username: req.params.username,
       password: req.params.password
     };
     db.User.findOne(visitor, function(err, item){
@@ -110,18 +115,64 @@ exports.oaktree = function(){
     });
   };
 
+  var addFriend = function(req, res, next) {
+    var sender_id = req.params.sender_id,
+        receiver_id = req.params.receiver_id,
+        sender = {},
+        receiver = {};
+
+    var query = {_id: {$in: [sender_id, receiver_id]}};
+
+    db.User.find(query, function(err, items){
+      console.log(items);
+      if(items.length === 2) {
+        if(items[0]._id === sender) {
+          sender.friends = items[0].friends;
+          receiver.friends = items[1].friends;
+        } else {
+          sender.friends = items[1].friends;
+          receiver.friends = items[0].friends;
+        }
+        sender.friends.push({_id: receiver_id, status: 0});
+        receiver.friends.push({_id: sender_id, status: 1});
+
+        db.User.update({_id:sender_id}, {$set: sender}, function(err, count) {
+          if(count === 1){
+            console.log("Friend request sent for "+ sender_id);
+            db.User.update({_id:receiver_id}, {$set: receiver}, function(err, count) {
+              if(count === 1) {
+                console.log("Friend request received for "+ receiver_id);
+
+                db.User.find({}, function(err, collection){
+                  console.log("users in db", collection);
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+  };
+
+  var listFriends = function(){};
+
   var server = restify.createServer();
   server.use(restify.CORS());
   server.use(restify.fullResponse());
 
   server.get('/', defaultResponse);
 
-  server.get('/user/new/:name/:password', newUser);
+  server.get('/user', listUsers);
+  server.get('/user/new/:username/:password', newUser);
   server.get('/user/login/:name/:password', loginUser);
 
   server.get('/message/send/:sender_id/:receiver_id/:message_body', newMessage);
   server.get('/message/retrieve/:user_id', retrieveMessages);
   server.get('/message/read/:message_id', readMessages);
+
+  server.get('/friends', listFriends);
+  server.get('/friends/add/:sender_id/:receiver_id', addFriend);
+
   server.listen(8080, function() {
     console.log('%s listening at %s', server.name, server.url);
   });

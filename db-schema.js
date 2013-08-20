@@ -3,11 +3,11 @@ exports.mongodb = function(){
   var mongoose = require('mongoose');
 
   var userSchema = mongoose.Schema({
-    name: {type: String, lowercase: true, trim: true, index: { unique: true }},
+    username: {type: String, lowercase: true, trim: true, index: { unique: true }},
     password: String,
     confirm_code: String,
     phone: Number,
-    contacts: Array,
+    friends: Array,
     messages: Array
   });
 
