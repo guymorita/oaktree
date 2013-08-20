@@ -7,22 +7,21 @@ exports.mongodb = function(){
     password: String,
     confirm_code: String,
     phone: Number,
-    friends: Array,
-    messages: Array
+    friends: Array
   });
 
   var User = mongoose.model('User', userSchema);
 
   var messageSchema = mongoose.Schema({
-    sender_id: String,
-    receiver_id: String,
+    sender_id: {type: String, index: true},
+    receiver_id: {type: String, index: true},
     status: { type: Number, default: 0 },
     geo_lat: Number,
     geo_lon: Number,
     hidden: Boolean,
     cleared: { type: Boolean, default: false },
     title: String,
-    message_body: String,
+    content: String,
     pic_url: String,
     date: { type: Date, default: Date.now }
   });

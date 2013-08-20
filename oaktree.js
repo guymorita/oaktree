@@ -1,6 +1,7 @@
 exports.oaktree = function(){
   var restify = require('restify');
   var _ = require('underscore');
+  var async = require('async');
   var db = require('./db-schema.js').mongodb();
 
   var mongoose = require('mongoose');
@@ -111,43 +112,38 @@ exports.oaktree = function(){
   };
 
   var newMessage = function(req, res, next){
+    console.log("yay!");
     var stream = '';
     req.on('data', function(chunk){
       stream += chunk;
     });
 
     req.on('end', function(){
-      var msg = JSON.parse(stream);
+      console.log("msg", stream);
+      var message = JSON.parse(stream);
 
-      var sender_id = msg.sender_id;
-      var receiver_id = msg.receiver_id;
+      var sender_id = message.sender_id;
+      var receiver_ids = message.receiver_ids;
 
-      var message = new db.Message(msg);
-      message.save(function(err, item){
-        if(item){
-          _getSenderAndReceiver(sender_id, receiver_id, function(sender, receiver){
-            var senderObject = {};
-            var receiverObject = {};
+      delete message[receiver_ids];
 
-            sender.messages.push(item._id);
-            receiver.messages.push(item._id);
+      console.log("deleted receiver ids", message);
 
-            senderObject.messages = sender.messages;
-            receiverObject.messages = receiver.messages;
+      function saveMessage(receiver_id) {
+        message.receiver_id = receiver_id;
 
+        console.log("message w/ receiver ", message);
+        var messagedb = new db.Message(message);
+        messagedb.save(function(err, item){
+          if(item) {
+            console.log("message sent to "+ receiver_id);
+          }
+        });
+      }
 
-            db.User.update({_id:sender_id}, {$set: senderObject}, function(err, count) {
-              if(count === 1){
-                db.User.update({_id:receiver_id}, {$set: receiverObject}, function(err, count) {
-                  if(count === 1) {
-                    res.send(item);
-                    console.log("Message sent from "+ val.sender_id +" to "+ val.receiver_id);
-                  }
-                });
-              }
-            });
-          });
-        }
+      async.each(receiver_ids, saveMessage, function(err){
+        console.log("all messages sent!");
+        if(err) {console.log(err);}
       });
     });
   };
