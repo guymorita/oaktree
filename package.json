@@ -1,6 +1,6 @@
 {
   "name": "oaktree",
-  "version": "0.1.0",
+  "version": "0.1.0-2",
   "engine": "node >= 0.8.x",
   "description": "Squirrel server",
   "dependencies": {
