@@ -6,7 +6,8 @@
   "dependencies": {
     "restify": "*",
     "mongoose": "*",
-    "supertest": "0.7.x"
+    "supertest": "0.7.x",
+    "underscore": "*"
   },
   "devDependencies": {
     "chai": "*",
