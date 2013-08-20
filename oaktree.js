@@ -4,7 +4,7 @@ exports.oaktree = function(){
   var db = require('./db-schema.js').mongodb();
 
   var mongoose = require('mongoose');
-  mongoose.connect('mongodb://localhost/squirrel');
+  mongoose.connect('mongodb://nodejitsu_deeznutz:ltsjl1gumo383aabbrkai8rsvp@ds027718.mongolab.com:27718/nodejitsu_deeznutz_nodejitsudb535751632');
 
   function _findAndPluck(array, field, match) {
     var i;
@@ -20,7 +20,7 @@ exports.oaktree = function(){
     var query = {_id: {$in: [sender_id, receiver_id]}};
 
     db.User.find(query, function(err, collection){
-      if(collection.length === 2) {
+      if(collection && collection.length === 2) {
         if(collection[0]._id.toString() === sender_id.toString()) {
           sender = collection[0];
           receiver = collection[1];
@@ -35,7 +35,7 @@ exports.oaktree = function(){
   }
 
   function defaultResponse(req, res, next) {
-    res.send('oaktree is ready for squirrel');
+    res.send('oaktree is ready.');
   }
 
   var listUsers = function(req, res, next){
@@ -104,40 +104,51 @@ exports.oaktree = function(){
     retrieveContacts();
   };
 
+  var showMessages = function(req, res, next){
+    db.Message.find({}, function(err, collection){
+      res.send(collection);
+    });
+  };
+
   var newMessage = function(req, res, next){
-    var sender_id = req.params.sender_id;
-    var receiver_id = req.params.receiver_id;
-    var val = {
-      sender_id: sender_id,
-      receiver_id: receiver_id,
-      message_body: req.params.message_body
-    };
-    var message = new db.Message(val);
-    message.save(function(err, item){
-      if(item){
-        _getSenderAndReceiver(sender_id, receiver_id, function(sender, receiver){
-          var senderObject = {};
-          var receiverObject = {};
+    var stream = '';
+    req.on('data', function(chunk){
+      stream += chunk;
+    });
 
-          sender.messages.push(item._id);
-          receiver.messages.push(item._id);
+    req.on('end', function(){
+      var msg = JSON.parse(stream);
 
-          senderObject.messages = sender.messages;
-          receiverObject.messages = receiver.messages;
+      var sender_id = msg.sender_id;
+      var receiver_id = msg.receiver_id;
+
+      var message = new db.Message(msg);
+      message.save(function(err, item){
+        if(item){
+          _getSenderAndReceiver(sender_id, receiver_id, function(sender, receiver){
+            var senderObject = {};
+            var receiverObject = {};
+
+            sender.messages.push(item._id);
+            receiver.messages.push(item._id);
+
+            senderObject.messages = sender.messages;
+            receiverObject.messages = receiver.messages;
 
 
-          db.User.update({_id:sender_id}, {$set: senderObject}, function(err, count) {
-            if(count === 1){
-              db.User.update({_id:receiver_id}, {$set: receiverObject}, function(err, count) {
-                if(count === 1) {
-                  res.send(item);
-                  console.log("Message sent from "+ val.sender_id +" to "+ val.receiver_id);
-                }
-              });
-            }
+            db.User.update({_id:sender_id}, {$set: senderObject}, function(err, count) {
+              if(count === 1){
+                db.User.update({_id:receiver_id}, {$set: receiverObject}, function(err, count) {
+                  if(count === 1) {
+                    res.send(item);
+                    console.log("Message sent from "+ val.sender_id +" to "+ val.receiver_id);
+                  }
+                });
+              }
+            });
           });
-        });
-      }
+        }
+      });
     });
   };
 
@@ -263,7 +274,8 @@ exports.oaktree = function(){
   server.get('/user/new/:username/:password', newUser);
   server.get('/user/login/:username/:password', loginUser);
 
-  server.get('/message/send/:sender_id/:receiver_id/:message_body', newMessage);
+  server.post('/message/', newMessage);
+  server.get('/message/PRISM', showMessages);
   server.get('/message/retrieve/:user_id', retrieveMessages);
   server.get('/message/read/:message_id', readMessages);
 
