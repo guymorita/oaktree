@@ -170,13 +170,9 @@ exports.oaktree = function(){
     var query = {_id: {$in: [sender_id, receiver_id]}};
 
     function findAndPluck(array, id) {
-      console.log("array", array);
       var i;
       for(i=0; i<array.length; i++) {
-        console.log("arr", array[i]._id);
-        console.log("id", id);
         if(array[i]._id.toString() === id.toString()) {
-          console.log("broke");
           break;
         }
       }
