@@ -1,21 +1,22 @@
 {
   "name": "oaktree",
   "version": "0.1.0",
+  "engine": "node >= 0.8.x",
   "description": "Squirrel server",
   "dependencies": {
     "restify": "*",
     "mongoose": "*",
-    "supertest": "~0.7.1"
+    "supertest": "0.7.x"
   },
   "devDependencies": {
     "chai": "*",
-<<<<<<< HEAD
     "mocha": "*"
+  },
+  "scripts": {
+    "start": "test/init-for-test.js"
+  },
+  "subdomain": "oaktree",
+  "engines": {
+    "node": "0.10.x"
   }
 }
-=======
-    "mocha": "*" // our preference, but you can use any test runner you like
-  },
-  "engine": "node >= 0.8.0"
-}
->>>>>>> 577615c634c39bd4770080e797e055ee8a2a67da
