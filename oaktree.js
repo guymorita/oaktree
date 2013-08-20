@@ -119,33 +119,38 @@ exports.oaktree = function(){
     var sender_id = req.params.sender_id,
         receiver_id = req.params.receiver_id,
         sender = {},
-        receiver = {};
+        receiver = {},
+        senderFriends = {},
+        receiverFriends = {};
 
     var query = {_id: {$in: [sender_id, receiver_id]}};
 
-    db.User.find(query, function(err, items){
-      console.log(items);
-      if(items.length === 2) {
-        if(items[0]._id === sender) {
-          sender.friends = items[0].friends;
-          receiver.friends = items[1].friends;
+    db.User.find(query, function(err, collection){
+      if(collection.length === 2) {
+        if(collection[0]._id.toString() === sender_id.toString()) {
+          sender = collection[0];
+          receiver = collection[1];
         } else {
-          sender.friends = items[1].friends;
-          receiver.friends = items[0].friends;
+          sender = collection[1];
+          receiver = collection[0];
         }
-        sender.friends.push({_id: receiver_id, status: 0});
-        receiver.friends.push({_id: sender_id, status: 1});
 
-        db.User.update({_id:sender_id}, {$set: sender}, function(err, count) {
+        sender.friends.push({_id: receiver_id, status: 0, username: receiver.username});
+        receiver.friends.push({_id: sender_id, status: 1, username: sender.username});
+
+        senderFriends.friends = sender.friends;
+        receiverFriends.friends = receiver.friends;
+
+        db.User.update({_id:sender_id}, {$set: senderFriends}, function(err, count) {
           if(count === 1){
-            console.log("Friend request sent for "+ sender_id);
-            db.User.update({_id:receiver_id}, {$set: receiver}, function(err, count) {
+            //console.log(sender.username +' has sent a friend request.');
+            db.User.update({_id:receiver_id}, {$set: receiverFriends}, function(err, count) {
               if(count === 1) {
-                console.log("Friend request received for "+ receiver_id);
-
-                db.User.find({}, function(err, collection){
-                  console.log("users in db", collection);
-                });
+                //console.log(receiver.username +' has received a request.');
+                console.log(sender.username +' has sent '+ receiver.username +' a friend request.');
+                res.status(201);
+                // sends the sender an updated friends list
+                res.send(sender.friends);
               }
             });
           }
@@ -154,7 +159,74 @@ exports.oaktree = function(){
     });
   };
 
-  var listFriends = function(){};
+  var acceptFriend = function(req, res, next) {
+    var sender_id = req.params.sender_id,
+        receiver_id = req.params.receiver_id,
+        sender = {},
+        receiver = {},
+        senderFriends = {},
+        receiverFriends = {};
+
+    var query = {_id: {$in: [sender_id, receiver_id]}};
+
+    function findAndPluck(array, id) {
+      console.log("array", array);
+      var i;
+      for(i=0; i<array.length; i++) {
+        console.log("arr", array[i]._id);
+        console.log("id", id);
+        if(array[i]._id.toString() === id.toString()) {
+          console.log("broke");
+          break;
+        }
+      }
+      return array.splice(i, 1);
+    }
+
+    db.User.find(query, function(err, collection){
+      if(collection.length === 2) {
+        if(collection[0]._id.toString() === sender_id.toString()) {
+          sender = collection[0];
+          receiver = collection[1];
+        } else {
+          sender = collection[1];
+          receiver = collection[0];
+        }
+
+        var rFriend = findAndPluck(sender.friends, receiver._id)[0];
+        var sFriend = findAndPluck(receiver.friends, sender._id)[0];
+
+        rFriend.status = 2;
+        sFriend.status = 2;
+
+        sender.friends.push(rFriend);
+        receiver.friends.push(sFriend);
+
+        senderFriends.friends = sender.friends;
+        receiverFriends.friends = receiver.friends;
+
+        db.User.update({_id:sender_id}, {$set: senderFriends}, function(err, count) {
+          if(count === 1){
+            db.User.update({_id:receiver_id}, {$set: receiverFriends}, function(err, count) {
+              if(count === 1) {
+                res.status(201);
+                res.send('Friendship made for '+ sender.username +' and '+ receiver.username);
+              }
+            });
+          }
+        });
+      }
+    });
+  };
+
+  var listFriends = function(req, res, next){
+    var query = {_id: req.params.user_id};
+
+    db.User.findOne(query, function(err, item){
+      console.log("Sending friends for "+ item.username);
+      res.send(item.friends);
+    });
+  };
 
   var server = restify.createServer();
   server.use(restify.CORS());
@@ -170,8 +242,9 @@ exports.oaktree = function(){
   server.get('/message/retrieve/:user_id', retrieveMessages);
   server.get('/message/read/:message_id', readMessages);
 
-  server.get('/friends', listFriends);
+  server.get('/friends/:user_id', listFriends);
   server.get('/friends/add/:sender_id/:receiver_id', addFriend);
+  server.get('/friends/accept/:sender_id/:receiver_id', acceptFriend);
 
   server.listen(8080, function() {
     console.log('%s listening at %s', server.name, server.url);
