@@ -66,8 +66,8 @@ exports.oaktree = function(){
       } else if(item) {
         res.status(201);
         item['password'] = undefined;
+        console.log("New user "+ item.username +" created");
         res.send(item);
-        console.log("New user "+ req.params.username +" created");
       }
     });
   };
@@ -160,11 +160,19 @@ exports.oaktree = function(){
   };
 
   var readMessages = function(req, res, next) {
-    var val = { _id: req.params.message_id };
-    db.Message.update(val, {$set: {status: 1}}, function(err, count, third) {
-      if(count === 1) {
-        res.status(201);
-        res.send("Message read.");
+    var query = { _id: req.params.message_id };
+    db.Message.findOne(query, function(err, item){
+      if(item.status === 0) {
+        db.Message.update(query, {$set: {status: 1}}, function(err, count) {
+          if(count === 1) {
+            res.status(201);
+            console.log("Message sent and marked as read.");
+            res.send(item);
+          }
+        });
+      } else {
+        res.status(401);
+        res.send("Message has already been read.");
       }
     });
   };
@@ -264,7 +272,6 @@ exports.oaktree = function(){
   var server = restify.createServer();
   server.use(restify.CORS());
   server.use(restify.fullResponse());
-  //server.use(restify.bodyParser({mapParams:false}));
 
   server.get('/', defaultResponse);
 

@@ -32,9 +32,9 @@ var makeUsers = function(cb) {
 var makeMessages = function(users) {
   var message = {
     sender_id: users[0].id,
-    receiver_ids: [users[1].id,users[2].id],
-    content: "omfg",
-    title: "hello title"
+    receiver_ids: [users[1].id, users[2].id, users[3].id],
+    content: "omfg how r u??",
+    title: "hello test"
   };
 
   request(oaktree.server).post('/message')
