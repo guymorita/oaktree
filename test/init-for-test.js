@@ -22,6 +22,7 @@ var makeUsers = function(cb) {
                   oaktree.User.find({}, function(err, collection){
                     console.log("users in db", collection);
                     cb(users);
+                    makeFriends(users);
                   });
                 });
             });
