@@ -1,9 +1,8 @@
-var oaktree = require('../oaktree.js').oaktree();
+var oaktree = require('../lib/oaktree.js').oaktree();
 var request = require('supertest');
 
 oaktree.User.find().remove({});
 oaktree.Message.find().remove({});
-
 
 var makeUsers = function(cb) {
   var users = [];
