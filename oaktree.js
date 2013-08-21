@@ -1,5 +1,5 @@
-exports.oaktree = function(){
-  var restify = require('restify');
+exports.oaktree = function() {
+  var express = require('express');
   var _ = require('underscore');
   var async = require('async');
   var db = require('./db-schema.js').mongodb();
@@ -20,7 +20,7 @@ exports.oaktree = function(){
   function _getSenderAndReceiver(sender_id, receiver_id, callback) {
     var query = {_id: {$in: [sender_id, receiver_id]}};
 
-    db.User.find(query, function(err, collection){
+    db.User.find(query, function(err, collection) {
       if(collection && collection.length === 2) {
         if(collection[0]._id.toString() === sender_id.toString()) {
           sender = collection[0];
@@ -35,17 +35,17 @@ exports.oaktree = function(){
     });
   }
 
-  function defaultResponse(req, res, next) {
+  function defaultResponse(req, res) {
     res.send('oaktree is ready.');
   }
 
-  var listUsers = function(req, res, next){
-    db.User.find({}, function(err, collection){
+  var listUsers = function(req, res) {
+    db.User.find({}, function(err, collection) {
       res.send(collection);
     });
   };
 
-  var newUser = function(req, res, next){
+  var newUser = function(req, res) {
     // create a user in the mongo db
     var code = req.params.username.substring(0,1) + '' + Math.floor(Math.random()*Date.now());
 
@@ -55,7 +55,7 @@ exports.oaktree = function(){
       confirm_code: code
     };
     var user = new db.User(newbie);
-    user.save(function(err, item){
+    user.save(function(err, item) {
       if(err) {
         if(err.code === 11000) {
           res.status(400);
@@ -72,12 +72,12 @@ exports.oaktree = function(){
     });
   };
 
-  var loginUser = function(req, res, next){
+  var loginUser = function(req, res) {
     var visitor = {
       username: req.params.username,
       password: req.params.password
     };
-    db.User.findOne(visitor, function(err, item){
+    db.User.findOne(visitor, function(err, item) {
       if(err) {
         res.send(err);
       } else {
@@ -96,29 +96,29 @@ exports.oaktree = function(){
     });
   };
 
-  var confirmUser = function(req, res, next){
+  var confirmUser = function(req, res) {
 
   };
 
-  var retrieveAll = function(req, res, next) {
+  var retrieveAll = function(req, res) {
     retrieveMessages();
     retrieveContacts();
   };
 
-  var showMessages = function(req, res, next){
-    db.Message.find({}, function(err, collection){
+  var showMessages = function(req, res) {
+    db.Message.find({}, function(err, collection) {
       res.send(collection);
     });
   };
 
-  var newMessage = function(req, res, next){
+  var newMessage = function(req, res) {
     var stream = '';
 
-    req.on('data', function(chunk){
+    req.on('data', function(chunk) {
       stream += chunk;
     });
 
-    req.on('end', function(){
+    req.on('end', function() {
       var message = JSON.parse(stream);
 
       var receiver_ids = message.receiver_ids.slice();
@@ -129,7 +129,7 @@ exports.oaktree = function(){
         message.receiver_id = receiver_id;
 
         var messagedb = new db.Message(message);
-        messagedb.save(function(err, item){
+        messagedb.save(function(err, item) {
           if(item) {
             console.log("message sent to receiver ", item);
             callback();
@@ -137,7 +137,7 @@ exports.oaktree = function(){
         });
       }
 
-      async.each(receiver_ids, saveMessage, function(err){
+      async.each(receiver_ids, saveMessage, function(err) {
         if(err) {console.log(err);}
         console.log("all messages sent!");
         res.send("message sent");
@@ -145,13 +145,13 @@ exports.oaktree = function(){
     });
   };
 
-  var retrieveMessages = function(req, res, next){
+  var retrieveMessages = function(req, res) {
     var val = {
       receiver_id: req.params.user_id,
       cleared: false
     };
-    db.Message.find(val, function(err, item){
-      if(item){
+    db.Message.find(val, function(err, item) {
+      if(item) {
         res.status(201);
         res.send(item);
         console.log("Retrieving messages for "+ val.receiver_id);
@@ -159,9 +159,9 @@ exports.oaktree = function(){
     });
   };
 
-  var readMessages = function(req, res, next) {
+  var readMessages = function(req, res) {
     var query = { _id: req.params.message_id };
-    db.Message.findOne(query, function(err, item){
+    db.Message.findOne(query, function(err, item) {
       if(item.status === 0) {
         db.Message.update(query, {$set: {status: 1}}, function(err, count) {
           if(count === 1) {
@@ -177,7 +177,7 @@ exports.oaktree = function(){
     });
   };
 
-  var addFriend = function(req, res, next) {
+  var addFriend = function(req, res) {
     var sender_id = req.params.sender_id,
         receiver_id = req.params.receiver_id,
         senderObject = {},
@@ -185,8 +185,8 @@ exports.oaktree = function(){
 
     var query = {_id: {$in: [sender_id, receiver_id]}};
 
-    _getSenderAndReceiver(sender_id, receiver_id, function(sender, receiver){
-      var alreadyFriend = _.find(sender.friends, function(friend){
+    _getSenderAndReceiver(sender_id, receiver_id, function(sender, receiver) {
+      var alreadyFriend = _.find(sender.friends, function(friend) {
         return (friend._id.toString() === receiver_id.toString());
       });
 
@@ -198,7 +198,7 @@ exports.oaktree = function(){
         receiverObject.friends = receiver.friends;
 
         db.User.update({_id:sender_id}, {$set: senderObject}, function(err, count) {
-          if(count === 1){
+          if(count === 1) {
             //console.log(sender.username +' has sent a friend request.');
             db.User.update({_id:receiver_id}, {$set: receiverObject}, function(err, count) {
               if(count === 1) {
@@ -221,7 +221,7 @@ exports.oaktree = function(){
     });
   };
 
-  var acceptFriend = function(req, res, next) {
+  var acceptFriend = function(req, res) {
     var sender_id = req.params.sender_id,
         receiver_id = req.params.receiver_id,
         senderObject = {},
@@ -229,7 +229,7 @@ exports.oaktree = function(){
 
     var query = {_id: {$in: [sender_id, receiver_id]}};
 
-    _getSenderAndReceiver(sender_id, receiver_id, function(sender, receiver){
+    _getSenderAndReceiver(sender_id, receiver_id, function(sender, receiver) {
 
       var rFriend = _findAndPluck(sender.friends, '_id', receiver._id)[0];
       var sFriend = _findAndPluck(receiver.friends, '_id', sender._id)[0];
@@ -244,7 +244,7 @@ exports.oaktree = function(){
       receiverObject.friends = receiver.friends;
 
       db.User.update({_id:sender_id}, {$set: senderObject}, function(err, count) {
-        if(count === 1){
+        if(count === 1) {
           db.User.update({_id:receiver_id}, {$set: receiverObject}, function(err, count) {
             if(count === 1) {
               res.status(201);
@@ -256,22 +256,36 @@ exports.oaktree = function(){
     });
   };
 
-  var listFriends = function(req, res, next){
+  var listFriends = function(req, res) {
     var query = {_id: req.params.user_id};
 
-    db.User.findOne(query, function(err, item){
+    db.User.findOne(query, function(err, item) {
       console.log("Sending friends for "+ item.username);
       res.send(item.friends);
     });
   };
 
-  // var optionsRequest = function(req, res, next){
-  //   console.log('req body', req.body);
-  // };
+  var server = express();
 
-  var server = restify.createServer();
-  server.use(restify.CORS());
-  server.use(restify.fullResponse());
+  var allowCrossDomain = function(req, res, next) {
+    console.log('allowingCrossDomain');
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Accept, Origin, Referer, User-Agent, Content-Type, Authorization');
+
+    // intercept OPTIONS method
+    if ('OPTIONS' == req.method) {
+      res.send(200);
+    }
+    else {
+      next();
+    }
+  };
+
+  server.configure(function() {
+    server.use(allowCrossDomain);
+    server.use(server.router);
+  });
 
   server.get('/', defaultResponse);
 
@@ -280,11 +294,6 @@ exports.oaktree = function(){
   server.get('/user/login/:username/:password', loginUser);
 
   server.post('/message', newMessage);
-  server.opts(/\.*/, function (req, res, next) {
-    console.log('req body', req.body);
-    res.send(200);
-    next();
-  });
   server.get('/message/PRISM', showMessages);
   server.get('/message/retrieve/:user_id', retrieveMessages);
   server.get('/message/read/:message_id', readMessages);
@@ -294,7 +303,7 @@ exports.oaktree = function(){
   server.get('/friends/accept/:sender_id/:receiver_id', acceptFriend);
 
   server.listen(8080, function() {
-    console.log('%s listening at %s', server.name, server.url);
+    console.log('%s listening at 8080', server.name);
   });
 
   return {

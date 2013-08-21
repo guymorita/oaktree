@@ -13,15 +13,15 @@ exports.mongodb = function(){
   var User = mongoose.model('User', userSchema);
 
   var messageSchema = mongoose.Schema({
-    sender_id: {type: String, index: true},
-    receiver_id: {type: String, index: true},
-    status: { type: Number, default: 0 },
+    sender_id: {type: String, index: true },
+    receiver_id: {type: String, index: true },
     latlng: Object,
-    hidden: Boolean,
-    cleared: { type: Boolean, default: false },
-    title: String,
+    title: { type: String, default: '' },
     content: String,
     pic_url: String,
+    hidden: { type: Boolean, default: false },
+    status: { type: Number, default: 0 },
+    cleared: { type: Boolean, default: false },
     date: { type: Date, default: Date.now }
   });
 
