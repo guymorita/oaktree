@@ -20,8 +20,9 @@ var makeUsers = function(cb) {
                   users.push({id: res.body._id, username: 'jill'});
                   oaktree.User.find({}, function(err, collection){
                     console.log("users in db", collection);
-                    cb(users);
-                    makeFriends(users);
+                    //cb(users);
+                    //makeFriends(users);
+                    makeImage(users);
                   });
                 });
             });
@@ -88,7 +89,7 @@ var makeMessages = function(users) {
                   request(oaktree.server).post('/message')
                     .send(JSON.stringify(message))
                     .end(function(err, res){
-                      console.log("messages sent");
+                      console.log("init: messages sent");
                     });
                 });
             });
@@ -109,12 +110,27 @@ var makeFriends = function(users) {
                     .end(function(err, res) {
                       request(oaktree.server).get('/friends/accept/'+ users[1].id +'/'+ users[2].id)
                         .end(function(err, res) {
-                          console.log("Friendships established");
+                          console.log("init: friendships established");
                         });
                     });
                 });
             });
         });
+    });
+};
+
+var makeImage = function(users) {
+  message = {
+    sender_id: users[2].id,
+    receiver_ids: [users[3].id],
+    content: "hello savannah",
+    title: "2nd from sally, hack reactor",
+    latlng: {"lat":37.783715,"lng":-122.408976}
+  };
+  request(oaktree.server).post('/image')
+    .send(JSON.stringify(message))
+    .end(function(err, res){
+      if(!err) { console.log("init: posted image"); }
     });
 };
 
