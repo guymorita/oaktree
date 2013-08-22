@@ -20,9 +20,9 @@ var makeUsers = function(cb) {
                   users.push({id: res.body._id, username: 'jill'});
                   oaktree.User.find({}, function(err, collection){
                     console.log("users in db", collection);
-                    //cb(users);
-                    //makeFriends(users);
-                    makeImage(users);
+                    makeMessages(users);
+                    makeFriends(users);
+                    //makeImage(users);
                   });
                 });
             });
@@ -89,7 +89,7 @@ var makeMessages = function(users) {
                   request(oaktree.server).post('/message')
                     .send(JSON.stringify(message))
                     .end(function(err, res){
-                      console.log("init: messages sent");
+                      console.log("INIT: messages sent");
                     });
                 });
             });
@@ -110,7 +110,7 @@ var makeFriends = function(users) {
                     .end(function(err, res) {
                       request(oaktree.server).get('/friends/accept/'+ users[1].id +'/'+ users[2].id)
                         .end(function(err, res) {
-                          console.log("init: friendships established");
+                          console.log("INIT: friendships established");
                         });
                     });
                 });
@@ -134,4 +134,4 @@ var makeImage = function(users) {
     });
 };
 
-makeUsers(makeMessages);
+makeUsers();
