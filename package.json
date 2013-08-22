@@ -1,6 +1,6 @@
 {
   "name": "oaktree",
-  "version": "0.1.0-19",
+  "version": "0.1.0-23",
   "engine": "node >= 0.8.x",
   "description": "Squirrel server",
   "dependencies": {
@@ -8,7 +8,8 @@
     "mongoose": "*",
     "supertest": "0.7.x",
     "underscore": "*",
-    "express": "3.3"
+    "express": "3.3",
+    "azure": "*"
   },
   "devDependencies": {
     "chai": "*",
