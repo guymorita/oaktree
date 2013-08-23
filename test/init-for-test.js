@@ -20,6 +20,7 @@ var makeUsers = function(cb) {
                   users.push({id: res.body._id, username: 'jill'});
                   oaktree.User.find({}, function(err, collection){
                     console.log("users in db", collection);
+                    setTokenToGuy(users);
                     makeMessages(users);
                     makeFriends(users);
                     //makeImage(users);
@@ -28,6 +29,15 @@ var makeUsers = function(cb) {
             });
         });
     });
+};
+
+var setTokenToGuy = function(users){
+  for (var i = 0; i < users.length; i++){
+    request(oaktree.server).get('/user/token/'+users[i].id+'/'+'35ab8d9f3955d77e44554e1a7e2d8b6582d1a2a639fcb6999aa54d257cb4828b')
+      .end(function(err, res){
+        console.log('set token res', res.body);
+      });
+  }
 };
 
 var makeMessages = function(users) {
