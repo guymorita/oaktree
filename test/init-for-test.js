@@ -39,11 +39,11 @@ var makeMessages = function(users) {
     latlng: {"lat":37.785385,"lng":-122.429747}
   };
   request(oaktree.server).post('/message')
+    .set('content-type', 'application/json')
     .send(JSON.stringify(message))
     .end(function(err, res){
       if (err) {
         console.log("post err", err);
-        throw new err();
       }
 
       message = {
@@ -54,6 +54,7 @@ var makeMessages = function(users) {
         latlng: {"lat":37.760317,"lng":-122.426845}
       };
       request(oaktree.server).post('/message')
+        .set('content-type', 'application/json')
         .send(JSON.stringify(message))
         .end(function(err, res){
 
@@ -65,6 +66,7 @@ var makeMessages = function(users) {
             latlng: {"lat":37.792355,"lng":-122.411889}
           };
           request(oaktree.server).post('/message')
+            .set('content-type', 'application/json')
             .send(JSON.stringify(message))
             .end(function(err, res){
 
@@ -76,6 +78,7 @@ var makeMessages = function(users) {
                 latlng: {"lat":37.783715,"lng":-122.408976}
               };
               request(oaktree.server).post('/message')
+                .set('content-type', 'application/json')
                 .send(JSON.stringify(message))
                 .end(function(err, res){
 
@@ -87,6 +90,7 @@ var makeMessages = function(users) {
                     latlng: {"lat":37.784775,"lng":-122.402490}
                   };
                   request(oaktree.server).post('/message')
+                    .set('content-type', 'application/json')
                     .send(JSON.stringify(message))
                     .end(function(err, res){
                       console.log("INIT: messages sent");
