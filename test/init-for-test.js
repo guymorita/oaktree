@@ -1,5 +1,6 @@
 var oaktree = require('../lib/oaktree.js').oaktree();
 var request = require('supertest');
+var FormData = require('form-data');
 
 oaktree.User.find().remove({});
 oaktree.Message.find().remove({});
@@ -22,7 +23,7 @@ var makeUsers = function(cb) {
                     console.log("users in db", collection);
                     //setTokenToGuy(users);
                     //makeMessages(users);
-                    // makeFriends(users);
+                    //makeFriends(users);
                     makeImage(users);
                   });
                 });
@@ -157,14 +158,12 @@ var makeImage = function(users) {
     .send(JSON.stringify(message))
     .end(function(err, res){
       if(!err) {
-        var message = JSON.parse(res.text);
+        var message = JSON.parse(res.text)[0]._id;
 
-        var secondObj = {
-          message_ids: [message._id]
-        };
-        request(oaktree.server).post('imagetest')
-          .set('content-type', 'application/json')
-          .send(JSON.stringify(secondObj))
+        console.log("sending fucks");
+        request(oaktree.server).post('/imagetest/?0=' + message + '&wtf=ohyeah')
+          .attach('photo','./test/morita.jpg')
+          .send()
           .end(function(err, res){
             console.log("attach image err", err);
             console.log("attach image res", err);
