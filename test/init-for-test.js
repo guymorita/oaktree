@@ -20,10 +20,10 @@ var makeUsers = function(cb) {
                   users.push({id: res.body._id, username: 'jill'});
                   oaktree.User.find({}, function(err, collection){
                     console.log("users in db", collection);
-                    setTokenToGuy(users);
-                    makeMessages(users);
-                    makeFriends(users);
-                    //makeImage(users);
+                    //setTokenToGuy(users);
+                    //makeMessages(users);
+                    // makeFriends(users);
+                    makeImage(users);
                   });
                 });
             });
@@ -38,11 +38,17 @@ var setTokenToGuy = function(users){
         console.log('set token res', res.body);
       });
   }
+  setTimeout(function(){
+    makeMessages(users);
+    makeFriends(users);
+  }, 2000);
+
 };
 
 var makeMessages = function(users) {
   var message = {
     sender_id: users[0].id,
+    sender_name: users[0].username,
     receiver_ids: [users[1].id, users[2].id, users[3].id],
     content: "message to tom, sally, and jill",
     title: "from bob, japantown test",
@@ -58,6 +64,7 @@ var makeMessages = function(users) {
 
       message = {
         sender_id: users[1].id,
+        sender_name: users[1].username,
         receiver_ids: [users[0].id, users[3].id],
         content: "message to bob and jill.. at dolores park",
         title: "from tom, dolores park",
@@ -70,6 +77,7 @@ var makeMessages = function(users) {
 
           message = {
             sender_id: users[2].id,
+            sender_name: users[2].username,
             receiver_ids: [users[3].id],
             content: "message to jill",
             title: "from sally, nob hill",
@@ -82,6 +90,7 @@ var makeMessages = function(users) {
 
               message = {
                 sender_id: users[2].id,
+                sender_name: users[2].username,
                 receiver_ids: [users[3].id],
                 content: "second message to jill",
                 title: "2nd from sally, hack reactor",
@@ -94,6 +103,7 @@ var makeMessages = function(users) {
 
                   message = {
                     sender_id: users[3].id,
+                    sender_name: users[3].username,
                     receiver_ids: [users[1].id, users[2].id],
                     content: "message to tom and sally",
                     title: "from jill, yerba buena",
@@ -136,15 +146,30 @@ var makeFriends = function(users) {
 var makeImage = function(users) {
   message = {
     sender_id: users[2].id,
+    sender_name: users[2].username,
     receiver_ids: [users[3].id],
-    content: "hello savannah",
-    title: "2nd from sally, hack reactor",
+    content: "hello jill",
+    title: "from sally, hack reactor",
     latlng: {"lat":37.783715,"lng":-122.408976}
   };
-  request(oaktree.server).post('/image')
+  request(oaktree.server).post('/message')
+    .set('content-type', 'application/json')
     .send(JSON.stringify(message))
     .end(function(err, res){
-      if(!err) { console.log("init: posted image"); }
+      if(!err) {
+        var message = JSON.parse(res.text);
+
+        var secondObj = {
+          message_ids: [message._id]
+        };
+        request(oaktree.server).post('imagetest')
+          .set('content-type', 'application/json')
+          .send(JSON.stringify(secondObj))
+          .end(function(err, res){
+            console.log("attach image err", err);
+            console.log("attach image res", err);
+          });
+      }
     });
 };
 
