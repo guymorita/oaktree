@@ -21,9 +21,9 @@ var makeUsers = function(cb) {
                   users.push({id: res.body._id, username: 'jill'});
                   oaktree.User.find({}, function(err, collection){
                     console.log("users in db", collection);
-                    //setTokenToGuy(users);
-                    //makeMessages(users);
-                    //makeFriends(users);
+                    // setTokenToGuy(users);
+                    makeMessages(users);
+                    makeFriends(users);
                     makeImage(users);
                   });
                 });
@@ -150,7 +150,7 @@ var makeImage = function(users) {
     sender_name: users[2].username,
     receiver_ids: [users[3].id],
     content: "hello jill",
-    title: "from sally, hack reactor",
+    title: "image attachment test",
     latlng: {"lat":37.783715,"lng":-122.408976}
   };
   request(oaktree.server).post('/message')
@@ -161,12 +161,12 @@ var makeImage = function(users) {
         var message = JSON.parse(res.text)[0]._id;
 
         console.log("sending fucks");
-        request(oaktree.server).post('/imagetest/?0=' + message + '&wtf=ohyeah')
+        request(oaktree.server).post('/imagetest/?0=' + message)
           .attach('photo','./test/morita.jpg')
           .send()
           .end(function(err, res){
             console.log("attach image err", err);
-            console.log("attach image res", err);
+            console.log("attach image res", res.text);
           });
       }
     });
