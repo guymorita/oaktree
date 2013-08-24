@@ -1,6 +1,5 @@
 var oaktree = require('../lib/oaktree.js').oaktree();
 var request = require('supertest');
-var FormData = require('form-data');
 
 oaktree.User.find().remove({});
 oaktree.Message.find().remove({});
@@ -21,10 +20,10 @@ var makeUsers = function(cb) {
                   users.push({id: res.body._id, username: 'jill'});
                   oaktree.User.find({}, function(err, collection){
                     console.log("users in db", collection);
-                    // setTokenToGuy(users);
-                    makeMessages(users);
-                    makeFriends(users);
-                    makeImage(users);
+                    setTokenToGuy(users);
+                    //makeMessages(users);
+                    //makeFriends(users);
+                    //makeImage(users);
                   });
                 });
             });
@@ -42,8 +41,7 @@ var setTokenToGuy = function(users){
   setTimeout(function(){
     makeMessages(users);
     makeFriends(users);
-  }, 2000);
-
+  }, 3000);
 };
 
 var makeMessages = function(users) {
@@ -114,7 +112,36 @@ var makeMessages = function(users) {
                     .set('content-type', 'application/json')
                     .send(JSON.stringify(message))
                     .end(function(err, res){
-                      console.log("INIT: messages sent");
+
+                      message = {
+                        sender_id: users[3].id,
+                        sender_name: users[3].username,
+                        receiver_ids: [users[2].id],
+                        content: "from jill",
+                        title: "to sally - near fillmore and turk",
+                        latlng: {"lat":37.780501,"lng":-122.432081}
+                      };
+                      request(oaktree.server).post('/message')
+                        .set('content-type', 'application/json')
+                        .send(JSON.stringify(message))
+                        .end(function(err, res){
+
+                          message = {
+                            sender_id: users[1].id,
+                            sender_name: users[1].username,
+                            receiver_ids: [users[2].id],
+                            content: "from tom",
+                            title: "to sally - near turk and leavenworth",
+                            latlng: {"lat":37.783079,"lng":-122.414142}
+                          };
+                          request(oaktree.server).post('/message')
+                            .set('content-type', 'application/json')
+                            .send(JSON.stringify(message))
+                            .end(function(err, res){
+
+                              console.log("INIT: messages sent");
+                            });
+                        });
                     });
                 });
             });
