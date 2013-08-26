@@ -1,47 +1,24 @@
 var oaktree = require('../lib/oaktree.js').oaktree();
 var request = require('supertest');
 
-oaktree.User.find().remove({});
-oaktree.Message.find().remove({});
+// oaktree.User.find().remove({});
+// oaktree.Message.find().remove({});
 
 var makeUsers = function(cb) {
   var users = [];
-  request(oaktree.server).get('/user/new/bob/bobpass')
-    .end(function(err, res) {
-      users.push({id: res.body._id, username: 'bob'});
-      request(oaktree.server).get('/user/new/tom/tompass')
-        .end(function(err, res) {
-          users.push({id: res.body._id, username: 'tom'});
-          request(oaktree.server).get('/user/new/sally/sallypass')
-            .end(function(err, res) {
-              users.push({id: res.body._id, username: 'sally'});
-              request(oaktree.server).get('/user/new/jill/jillpass')
-                .end(function(err, res) {
-                  users.push({id: res.body._id, username: 'jill'});
-                  oaktree.User.find({}, function(err, collection){
-                    console.log("users in db", collection);
-                    setTokenToGuy(users);
-                    //makeMessages(users);
-                    //makeFriends(users);
-                    //makeImage(users);
-                  });
-                });
-            });
-        });
-    });
-};
-
-var setTokenToGuy = function(users){
-  for (var i = 0; i < users.length; i++){
-    request(oaktree.server).get('/user/token/'+users[i].id+'/'+'35ab8d9f3955d77e44554e1a7e2d8b6582d1a2a639fcb6999aa54d257cb4828b')
-      .end(function(err, res){
-        console.log('set token res', res.body);
+  request(oaktree.server).get('/user/new/hatch/squirrelEgg5')
+  .end(function(err, res) {
+    request(oaktree.server).get('/user/new/svnh/plantlife')
+      .end(function(err, res) {
+        users.push({id: res.body._id, username: 'svnh'});
+        request(oaktree.server).get('/user/new/guy/plantlife')
+          .end(function(err, res) {
+            users.push({id: res.body._id, username: 'guy'});
+            //setTokenToGuy(users);
+            console.log("Made folks");
+          });
       });
-  }
-  setTimeout(function(){
-    makeMessages(users);
-    makeFriends(users);
-  }, 3000);
+  });
 };
 
 var makeMessages = function(users) {
@@ -171,32 +148,5 @@ var makeFriends = function(users) {
     });
 };
 
-var makeImage = function(users) {
-  message = {
-    sender_id: users[2].id,
-    sender_name: users[2].username,
-    receiver_ids: [users[3].id],
-    content: "hello jill",
-    title: "image attachment test",
-    latlng: {"lat":37.783715,"lng":-122.408976}
-  };
-  request(oaktree.server).post('/message')
-    .set('content-type', 'application/json')
-    .send(JSON.stringify(message))
-    .end(function(err, res){
-      if(!err) {
-        var message = JSON.parse(res.text)[0]._id;
 
-        console.log("sending fucks");
-        request(oaktree.server).post('/imagetest/?0=' + message)
-          .attach('photo','./test/morita.jpg')
-          .send()
-          .end(function(err, res){
-            console.log("attach image err", err);
-            console.log("attach image res", res.text);
-          });
-      }
-    });
-};
-
-makeUsers();
+//makeUsers();
