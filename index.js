@@ -1,1 +1,1 @@
-module.exports = require('/lib/oaktree.js').oaktree();
+module.exports = require('./lib/oaktree.js').oaktree();
