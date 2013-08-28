@@ -1,8 +1,9 @@
 var chai = require('chai');
 var assert = chai.assert;
 var expect = chai.expect;
+var async = require('async');
 
-var oaktree = require('../oaktree.js').oaktree();
+var oaktree = require('../lib/oaktree.js').oaktree();
 
 var request = require('supertest');
 
@@ -17,8 +18,8 @@ describe('New user creation', function(){
       });
   });
   it('should create a new user when it receives a get request for a new user', function(done){
-    oaktree.User.findOne({name:'bob'}, function(err, res){
-      assert.equal(res.name, 'bob');
+    oaktree.User.findOne({username:'bob'}, function(err, res){
+      assert.equal(res.username, 'bob');
       done();
     });
   });
@@ -34,7 +35,7 @@ describe('New user creation', function(){
     request(oaktree.server)
       .get('/user/new/bob/bobpass22')
       .end(function(err, res){
-        assert.equal(res.text, '"Duplicate username."');
+        assert.equal(res.text, "Username already exists, please choose another name.");
         done();
     });
   });
@@ -68,13 +69,23 @@ describe('User login', function(){
 });
 
 describe('Sent messages', function(){
-  var message_id = 1;
+  var message = {
+    sender_id: 132,
+    sender_name: 'Al',
+    receiver_ids: [555],
+    content: "message from al",
+    title: "hi herro prease",
+    latlng: {"lat":37.785385,"lng":-122.429747}
+  };
+  var message_id = null;
   beforeEach(function(done){
     oaktree.Message.find().remove({});
     request(oaktree.server)
-      .get('/message/send/132/555/helloworld')
+      .post('/message/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(message))
       .end(function(err, res){
-        message_id = res.body._id;
+        message_id = JSON.parse(res.res.text)[0]._id;
         done();
       });
   });
@@ -95,8 +106,8 @@ describe('Sent messages', function(){
   it('should embed the correct message', function(done){
     // oaktree.User.findOne({name:'bob'}, function(err, res){
       oaktree.Message.findOne({_id: message_id }, function(err, item) {
-        assert.equal(item.message_body, "helloworld");
-        assert.notEqual(item.message_body, "hello");
+        assert.equal(item.content, "message from al");
+        assert.notEqual(item.content, "hello");
         done();
       });
   });
@@ -117,58 +128,93 @@ describe('Sent messages', function(){
 });
 
 describe('Retrieve messages', function(){
-  var message1_id, message2_id, message3_id;
-  beforeEach(function(done){
+  var message1 = {
+    sender_id: 132,
+    sender_name: 'Guy',
+    receiver_ids: [555],
+    title: 'herro',
+    content: 'world',
+    latlng: {
+      lat: 132,
+      lng: -54
+    }
+  };
+  var message2 = {
+    sender_id: 111,
+    sender_name: 'Al',
+    receiver_ids: [555],
+    title: 'sup dude',
+    content: 'you know how it is',
+    latlng: {
+      lat: 23,
+      lng: -84
+    }
+  };
+  var message3 = {
+    sender_id: 111,
+    sender_name: 'Savannah',
+    receiver_ids: [5],
+    title: 'super duper',
+    content: 'test',
+    latlng: {
+      lat: 58,
+      lng: -82
+    }
+  };
+  var messageArray = [message1, message2, message3];
+  var messageRes = [];
+  before(function(done){
     oaktree.Message.find().remove({});
-    request(oaktree.server).get('/message/send/132/555/helloworld')
-      .end(function(err, res){
-        message1_id = res.body._id;
-        request(oaktree.server).get('/message/send/111/555/helloworld2')
+    async.eachSeries(messageArray,
+      function(message, callback){
+        request(oaktree.server)
+          .post('/message/')
+          .set('content-type', 'application/json')
+          .send(JSON.stringify(message))
           .end(function(err, res){
-            message2_id = res.body._id;
-            request(oaktree.server).get('/message/send/111/5/notfor555')
-              .end(function(err, res){
-                message3_id = res.body._id;
-                done();
-              });
+            messageRes.push(JSON.parse(res.res.text)[0]._id);
+            callback();
           });
-      });
+      },
+      function(err){
+        done();
+      }
+      );
   });
   it('should retrieve messages for the user.', function(done){
     request(oaktree.server).get('/message/retrieve/555')
       .end(function(err, res){
-        expect(res.body.length).to.eql(2);
-        assert.equal(res.body[0]._id, message1_id);
-        assert.equal(res.body[1]._id, message2_id);
-        assert.equal(res.body[1].receiver_id, 555);
-        assert.notEqual(res.body[0]._id, message2_id);
+        expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
+        assert.equal(JSON.parse(res.res.text).inbox[1]._id, messageRes[0]);
+        assert.equal(JSON.parse(res.res.text).inbox[0]._id, messageRes[1]);
+        assert.equal(JSON.parse(res.res.text).inbox[1].receiver_id, 555);
+        assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[1]);
         done();
       });
   });
   it('should retrieve both read and unread messages.', function(done){
-    this.timeout(5000);
-    oaktree.Message.update({_id: message1_id}, {$set: {status: 1}}, function(err, count) {
+    oaktree.Message.update({_id: messageRes[0]}, {$set: {status: 1}}, function(err, count) {
       if(count === 1) {
         request(oaktree.server).get('/message/retrieve/555')
             .end(function(err, res){
-              expect(res.body.length).to.eql(2);
-              assert.equal(res.body[0]._id, message1_id);
-              assert.equal(res.body[1]._id, message2_id);
-              assert.notEqual(res.body[0]._id, message2_id);
+              expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
+              assert.equal(JSON.parse(res.res.text).inbox[1]._id, messageRes[0]);
+              assert.equal(JSON.parse(res.res.text).inbox[0]._id, messageRes[1]);
+              assert.equal(JSON.parse(res.res.text).inbox[1].receiver_id, 555);
+              assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[1]);
               done();
             });
       }
     });
   });
   it('should not retrieve cleared messages.', function(done){
-    this.timeout(5000);
-    oaktree.Message.update({_id: message1_id}, {$set: {cleared: true}}, function(err, count) {
+    oaktree.Message.update({_id: messageRes[0]}, {$set: {cleared: true}}, function(err, count) {
       if(count === 1) {
         request(oaktree.server).get('/message/retrieve/555')
             .end(function(err, res){
-              expect(res.body.length).to.eql(1);
-              assert.notEqual(res.body[0]._id, message1_id);
-              assert.equal(res.body[0]._id, message2_id);
+              expect(JSON.parse(res.res.text).inbox.length).to.eql(1);
+              assert.equal(JSON.parse(res.res.text).inbox[0]._id, messageRes[1]);
+              assert.equal(JSON.parse(res.res.text).inbox[1], undefined);
               done();
             });
       }
@@ -177,42 +223,80 @@ describe('Retrieve messages', function(){
 });
 
 describe('Read messages', function(){
-  var message1_id, message2_id, message3_id;
-  beforeEach(function(done){
+  var message1 = {
+    sender_id: 132,
+    sender_name: 'Guy',
+    receiver_ids: [555],
+    title: 'herro',
+    content: 'world',
+    latlng: {
+      lat: 132,
+      lng: -54
+    }
+  };
+  var message2 = {
+    sender_id: 111,
+    sender_name: 'Al',
+    receiver_ids: [555],
+    title: 'sup dude',
+    content: 'you know how it is',
+    latlng: {
+      lat: 23,
+      lng: -84
+    }
+  };
+  var message3 = {
+    sender_id: 111,
+    sender_name: 'Al',
+    receiver_ids: [5],
+    title: 'super duper',
+    content: 'test',
+    latlng: {
+      lat: 58,
+      lng: -82
+    }
+  };
+  var messageArray = [message1, message2, message3];
+  var messageRes = [];
+  before(function(done){
     oaktree.Message.find().remove({});
-    request(oaktree.server).get('/message/send/132/555/helloworld')
-      .end(function(err, res){
-        message1_id = res.body._id;
-        request(oaktree.server).get('/message/send/111/555/helloworld2')
+    async.eachSeries(messageArray,
+      function(message, callback){
+        request(oaktree.server)
+          .post('/message/')
+          .set('content-type', 'application/json')
+          .send(JSON.stringify(message))
           .end(function(err, res){
-            message2_id = res.body._id;
-            request(oaktree.server).get('/message/send/111/5/notfor555')
-              .end(function(err, res){
-                message3_id = res.body._id;
-                request(oaktree.server).get('/message/read/' + message1_id)
-                  .end(function(err, res){
-                    done();
-                  });
-              });
+            messageRes.push(JSON.parse(res.res.text)[0]._id);
+            callback();
           });
-      });
+      },
+      function(err){
+        request(oaktree.server)
+          .get('/message/read/' + messageRes[0])
+          .end(function(err, res){
+            done();
+          });
+      }
+      );
   });
   it('should mark the message as read.', function(done){
     request(oaktree.server).get('/message/retrieve/555')
       .end(function(err, res){
-        assert.equal(res.body[0]._id, message1_id);
-        assert.equal(res.body[0].status, 1);
-        assert.notEqual(res.body[0]._id, message2_id);
-        assert.notEqual(res.body[0].status, 0);
+        resInbox = JSON.parse(res.res.text).inbox;
+        assert.equal(resInbox[0]._id, messageRes[1]);
+        assert.equal(resInbox[1]._id, messageRes[0]);
+        assert.equal(resInbox[1].status, 1);
+        assert.equal(resInbox[0].status, 0);
         done();
       });
   });
   it('should not affect message retrieval count.', function(done){
     request(oaktree.server).get('/message/retrieve/555')
       .end(function(err, res){
-        expect(res.body.length).to.eql(2);
-        assert.equal(res.body[0]._id, message1_id);
-        assert.equal(res.body[1]._id, message2_id);
+        expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
+        assert.equal(JSON.parse(res.res.text).inbox[0]._id, messageRes[1]);
+        assert.equal(JSON.parse(res.res.text).inbox[1]._id, messageRes[0]);
         done();
       });
   });
