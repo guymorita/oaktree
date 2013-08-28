@@ -25,7 +25,7 @@
     "chai": "*",
     "mocha": "*",
     "grunt-mocha-test": "0.6.2",
-    "grunt-contrib-jshint": "0.6.*",
+    "grunt-contrib-jshint": "0.6.x",
     "grunt-contrib-watch": "0.5.1",
     "grunt-mocha-cov": "0.0.4",
     "sinon-chai": "2.4.0",
