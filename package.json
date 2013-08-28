@@ -30,7 +30,8 @@
     "grunt-mocha-cov": "0.0.4",
     "sinon-chai": "2.4.0",
     "sinon": "1.7.3",
-    "grunt-blanket-mocha": "0.2.0"
+    "grunt-blanket-mocha": "0.2.0",
+    "q": "~0.9.6"
   },
   "scripts": {
     "test": "grunt test",

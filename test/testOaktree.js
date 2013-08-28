@@ -2,6 +2,7 @@ var chai = require('chai');
 var assert = chai.assert;
 var expect = chai.expect;
 var async = require('async');
+var Q = require('q');
 
 var oaktree = require('../lib/oaktree.js').oaktree();
 
@@ -9,10 +10,16 @@ var request = require('supertest');
 
 
 describe('New user creation', function(){
+  var user1 = {
+    username: 'bob',
+    password: 'bobpass'
+  };
   beforeEach(function(done){
     oaktree.User.find().remove({});
     request(oaktree.server)
-      .get('/user/new/bob/bobpass')
+      .post('/user/new/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(user1))
       .end(function(err, res){
         done();
       });
@@ -25,7 +32,9 @@ describe('New user creation', function(){
   });
   it('should return an error code if a username already exists', function(done){
     request(oaktree.server)
-      .get('/user/new/bob/bobpass22')
+      .post('/user/new/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(user1))
       .end(function(err, res){
         assert.equal(res.statusCode, "400");
         done();
@@ -33,7 +42,9 @@ describe('New user creation', function(){
   });
   it('should return an error message if a username already exists', function(done){
     request(oaktree.server)
-      .get('/user/new/bob/bobpass22')
+      .post('/user/new/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(user1))
       .end(function(err, res){
         assert.equal(res.text, "Username already exists, please choose another name.");
         done();
@@ -42,25 +53,36 @@ describe('New user creation', function(){
 });
 
 describe('User login', function(){
+  var user1 = {
+    username: 'bob',
+    password: 'bobpass'
+  };
   beforeEach(function(done){
     oaktree.User.find().remove({});
     request(oaktree.server)
-      .get('/user/new/bob/bobpass')
+      .post('/user/new/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(user1))
       .end(function(err, res){
         done();
       });
   });
   it('should return status code 200 when a user provides a valid user/password combination', function(done){
     request(oaktree.server)
-      .get('/user/login/bob/bobpass')
+      .post('/user/login/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(user1))
       .end(function(err, res){
         assert.equal(res.statusCode, "200");
         done();
     });
   });
   it('should return status code 401 when a user provides a invalid user/password combination', function(done){
+    user1.password = 'noprease';
     request(oaktree.server)
-      .get('/user/login/bob/bobpassddd')
+      .post('/user/login/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(user1))
       .end(function(err, res){
         assert.equal(res.statusCode, "401");
         done();
@@ -301,3 +323,148 @@ describe('Read messages', function(){
       });
   });
 });
+
+describe('friending', function(){
+  var user0 = {
+    username: 'kyle',
+    password: '123'
+  };
+  var user1 = {
+    username: 'bob',
+    password: '234'
+  };
+  var user2 = {
+    username: 'josh',
+    password: 'sdk'
+  };
+  var user3 = {
+    username: 'tuhin',
+    password: '0ee'
+  };
+  var usersArray = [user0, user1, user2, user3];
+  var userIds = [];
+  before(function(done){
+    oaktree.User.find().remove({});
+    oaktree.Message.find().remove({});
+    async.eachSeries(usersArray,
+      function(userObj, callback){
+        request(oaktree.server)
+          .post('/user/new/')
+          .set('content-type', 'application/json')
+          .send(JSON.stringify(userObj))
+          .end(function(err, res){
+            // console.log('username', userObj.username);
+            // console.log(res.res.text);
+            userIds.push(JSON.parse(res.res.text)._id);
+            callback();
+          });
+      },
+      function(err){
+        async.series([
+          function(callback){
+            request(oaktree.server)
+              .get('/friends/add/'+userIds[0]+'/'+userIds[1])
+              .end(function(err, res){
+                callback(null, JSON.parse(res.res.text));
+              });
+          },
+          function(callback){
+            request(oaktree.server)
+              .get('/friends/add/'+userIds[1]+'/'+userIds[2])
+              .end(function(err, res){
+                callback(null, JSON.parse(res.res.text));
+              });
+          },
+          function(callback){
+            request(oaktree.server)
+              .get('/friends/add/'+userIds[3]+'/'+userIds[2])
+              .end(function(err, res){
+                callback(null, JSON.parse(res.res.text));
+              });
+          },
+          function(callback){
+            request(oaktree.server)
+              .get('/friends/add/'+userIds[2]+'/'+userIds[0])
+              .end(function(err, res){
+                callback(null, JSON.parse(res.res.text));
+              });
+          },
+          function(callback){
+            request(oaktree.server)
+              .get('/friends/accept/'+userIds[3]+'/'+userIds[2])
+              .end(function(err, res){
+                callback(null, JSON.parse(res.res.text));
+              });
+          },
+          function(callback){
+            request(oaktree.server)
+              .get('/friends/accept/'+userIds[0]+'/'+userIds[1])
+              .end(function(err, res){
+                callback(null, JSON.parse(res.res.text));
+              });
+          },
+          function(callback){
+            request(oaktree.server)
+              .get('/friends/deny/'+userIds[1]+'/'+userIds[2])
+              .end(function(err, res){
+                callback(null, JSON.parse(res.res.text));
+              });
+          },
+          function(callback){
+            request(oaktree.server)
+              .get('/friends/deny/'+userIds[2]+'/'+userIds[0])
+              .end(function(err, res){
+                callback(null, JSON.parse(res.res.text));
+              });
+          },
+          function(callback){
+            request(oaktree.server)
+              .get('/friends/add/'+userIds[1]+'/'+userIds[3])
+              .end(function(err, res){
+                callback(null, JSON.parse(res.res.text));
+              });
+          }
+        ],
+        function(err, results){
+          console.log('results', results);
+          done();
+        });
+      });
+    // create 4 users
+    // invite, friend, deny. test all states of the app
+  });
+  it('should have everyone else in user 1s friend list (not counting status)', function(done){
+    request(oaktree.server)
+      .get('/friends/'+ userIds[1])
+      .end(function(err, res){
+        assert.equal(JSON.parse(res.res.text).length, 3);
+        done();
+      });
+  });
+  it('should have the correct statuses for all user 2', function(done){
+    request(oaktree.server)
+      .get('/friends/' + userIds[2])
+      .end(function(err, res){
+        var response = JSON.parse(res.res.text);
+        console.log('res', JSON.parse(res.res.text));
+        assert.equal(response[0].status, -2);
+        assert.equal(response[1].status, -1);
+        assert.equal(response[2].status, 2);
+        done();
+      });
+  });
+});
+
+// var deferred = Q.defer();
+// request({
+//   method: 'GET',
+//   url: endPoint,
+//   qs: _.extend(defaults, query) // query properties will override defaults
+//   },function(error, response, body){
+//     if (error) {
+//       deferred.reject(error);
+//     } else {
+//       deferred.resolve(body);
+//     }
+// });
+// return deferred.promise;
