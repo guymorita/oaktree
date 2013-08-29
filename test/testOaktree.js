@@ -24,7 +24,7 @@ describe('New user creation', function(){
         done();
       });
   });
-  it('should create a new user when it receives a get request for a new user', function(done){
+  it('should create a new user when it receives a post request to make a user', function(done){
     oaktree.User.findOne({username:'bob'}, function(err, res){
       assert.equal(res.username, 'bob');
       done();
@@ -53,16 +53,16 @@ describe('New user creation', function(){
 });
 
 describe('User login', function(){
-  var user1 = {
-    username: 'bob',
-    password: 'bobpass'
+  oaktree.User.find().remove({});
+  var user2 = {
+    username: 'tom',
+    password: 'tompass'
   };
   beforeEach(function(done){
-    oaktree.User.find().remove({});
     request(oaktree.server)
       .post('/user/new/')
       .set('content-type', 'application/json')
-      .send(JSON.stringify(user1))
+      .send(JSON.stringify(user2))
       .end(function(err, res){
         done();
       });
@@ -71,18 +71,18 @@ describe('User login', function(){
     request(oaktree.server)
       .post('/user/login/')
       .set('content-type', 'application/json')
-      .send(JSON.stringify(user1))
+      .send(JSON.stringify(user2))
       .end(function(err, res){
         assert.equal(res.statusCode, "200");
         done();
     });
   });
   it('should return status code 401 when a user provides a invalid user/password combination', function(done){
-    user1.password = 'noprease';
+    user2.password = 'noprease';
     request(oaktree.server)
       .post('/user/login/')
       .set('content-type', 'application/json')
-      .send(JSON.stringify(user1))
+      .send(JSON.stringify(user2))
       .end(function(err, res){
         assert.equal(res.statusCode, "401");
         done();
