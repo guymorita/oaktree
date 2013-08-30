@@ -46,7 +46,7 @@ describe('New user creation', function(){
         },
         function(err){
           done();
-        });
+         });
   });
   it('should create a new user when it receives a post request to make a user', function(done){
     oaktree.User.findOne({username:'bob'}, function(err, res){
