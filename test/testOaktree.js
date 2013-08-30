@@ -414,7 +414,7 @@ describe('Read messages', function(){
 //if user b tries to friend user a, they automatically become friends
 
 
-describe('Friend requests ', function(){
+describe('Friend requests', function(){
   var user0 = {
     username: 'al',
     password: '123',
@@ -494,7 +494,7 @@ describe('Friend requests ', function(){
           });
      });
   });
-  it('should change the status 2 for both users if the invitee also adds the inviter as a friend.', function(done){
+  it('should change the status 2 for both users if the invitee also requests the inviter as a friend.', function(done){
     request(oaktree.server)
       .get('/friends/add/'+ userIds[1]+'/'+userIds[0])
       .end(function(err, res){
@@ -511,7 +511,7 @@ describe('Friend requests ', function(){
           });
      });
   });
-  it('should change the status -2 for the inviter if the invitee rejects the friend request.', function(done){
+  it('should change the status -2 for the inviter if the invitee denies the friend request.', function(done){
     request(oaktree.server)
       .get('/friends/deny/'+ userIds[0] +'/'+ userIds[1])
       .end(function(err, res){
@@ -535,7 +535,7 @@ describe('Friend requests ', function(){
           });
      });
   });
-  it("should change the status 2 for both users if the invitee friends a previously denied inviter.", function(done){
+  it("should change the status 2 for both users (make them friends) if the invitee friends a previously denied inviter.", function(done){
     request(oaktree.server)
       .get('/friends/deny/'+ userIds[0] +'/'+ userIds[1])
       .end(function(err, res){
