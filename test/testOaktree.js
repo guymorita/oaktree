@@ -387,7 +387,7 @@ describe('Friend requests ', function(){
             request(oaktree.server)
               .get('/friends/add/'+userIds[0]+'/'+userIds[1])
               .end(function(err, res){
-                  console.log('usr', userIds)
+                  console.log('usr', userIds);
                   done();
               });
       });
