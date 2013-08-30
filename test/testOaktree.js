@@ -32,21 +32,22 @@ describe('New user creation', function(){
 
   beforeEach(function(done){
     userIds = [];
-    oaktree.User.find().remove({});
-    async.eachSeries(usersArray,
-        function(user, callback){
-          request(oaktree.server)
-            .post('/user/new/')
-            .set('content-type', 'application/json')
-            .send(JSON.stringify(user))
-            .end(function(err, res){
-              userIds.push(JSON.parse(res.text)._id);
-              callback();
-            });
-        },
-        function(err){
-          done();
-         });
+    oaktree.User.remove({}, function(){
+      async.eachSeries(usersArray,
+          function(user, callback){
+            request(oaktree.server)
+              .post('/user/new/')
+              .set('content-type', 'application/json')
+              .send(JSON.stringify(user))
+              .end(function(err, res){
+                userIds.push(JSON.parse(res.text)._id);
+                callback();
+              });
+          },
+          function(err){
+            done();
+          });
+    });
   });
   it('should create a new user when it receives a post request to make a user', function(done){
     oaktree.User.findOne({username:'bob'}, function(err, res){
@@ -105,19 +106,38 @@ describe('New user creation', function(){
     });
   });
   it('should automatically friend the user to svnh, guy, and hatch', function(done){
+
+    var tomasUser = {
+      username: 'tomas',
+      password: 'capncruch'
+    };
     request(oaktree.server)
-      .get('/friends/' + userIds[3])
+      .post('/user/new/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(tomasUser))
       .end(function(err, res){
-        var friends = res.body;
-        assert.equal(friends.length, 3);
-        assert.equal(friends[0].status, '2');
-        assert.equal(friends[1].status, '2');
-        assert.equal(friends[2].status, '2');
-        done();
-      });
+      var tomasId = res.body._id;
+
+      request(oaktree.server)
+        .get('/friends/' + tomasId)
+        .end(function(err, res){
+          var friends = res.body;
+          console.log('friends', friends);
+          assert.equal(friends.length, 3);
+          assert.equal(friends[0].status, '2');
+          assert.equal(friends[1].status, '2');
+          assert.equal(friends[2].status, '2');
+          done();
+        });
+
+    });
+
+
+
   });
 });
 
+/*
 describe('User login', function(){
   oaktree.User.find().remove({});
   var user2 = {
@@ -551,7 +571,7 @@ describe('Friend requests', function(){
      });
   });
 });
-
+*/
 // var deferred = Q.defer();
 // request({
 //   method: 'GET',

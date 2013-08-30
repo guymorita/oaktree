@@ -17,7 +17,7 @@ global.db = require('./config/db-schema.js').mongodb();
 
 // staging env
 // mongoose.connect(process.env.MONGO_STAGINGDB);
-mongoose.connect('mongodb://nodejitsu_deeznutz:147iso2dksto8gbbq9klpk7i75@ds039267.mongolab.com:39267/nodejitsu_deeznutz_nodejitsudb2687562622');
+mongoose.connect('mongodb://nodejitsu_deeznutz:kds001m9bp2c43edpfh5kfm6e5@ds039267.mongolab.com:39267/nodejitsu_deeznutz_nodejitsudb2606280623');
 
 // production env
 // mongoose.connect(process.env.MONGO_PRODUCTIONDB);
