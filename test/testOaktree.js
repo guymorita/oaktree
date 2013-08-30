@@ -4,7 +4,7 @@ var expect = chai.expect;
 var async = require('async');
 var Q = require('q');
 
-var oaktree = require('../lib/oaktree.js').oaktree();
+var oaktree = require('../app.js');
 
 var request = require('supertest');
 
