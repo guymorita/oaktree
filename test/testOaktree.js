@@ -10,19 +10,42 @@ var request = require('supertest');
 
 
 describe('New user creation', function(){
+  var f0 = {
+    username: 'hatch',
+    password: 'hatchpass'
+  };
+  var f1 = {
+    username: 'svnh',
+    password: 'svnh'
+  };
+  var f2 = {
+    username: 'guy',
+    password: 'guy'
+  };
   var user1 = {
     username: 'bob',
     password: 'bobpass'
   };
+
+  var usersArray = [f0, f1, f2, user1];
+  var userIds = [];
+
   beforeEach(function(done){
     oaktree.User.find().remove({});
-    request(oaktree.server)
-      .post('/user/new/')
-      .set('content-type', 'application/json')
-      .send(JSON.stringify(user1))
-      .end(function(err, res){
-        done();
-      });
+    async.eachSeries(usersArray,
+        function(user, callback){
+          request(oaktree.server)
+            .post('/user/new/')
+            .set('content-type', 'application/json')
+            .send(JSON.stringify(user))
+            .end(function(err, res){
+              userIds.push(JSON.parse(res.text)._id);
+              callback();
+            });
+        },
+        function(err){
+          done();
+        });
   });
   it('should create a new user when it receives a post request to make a user', function(done){
     oaktree.User.findOne({username:'bob'}, function(err, res){
@@ -40,7 +63,7 @@ describe('New user creation', function(){
         done();
     });
   });
-  it('should return an error message if a username already exists', function(done){
+  it('should return an existing user message if a username already exists', function(done){
     request(oaktree.server)
       .post('/user/new/')
       .set('content-type', 'application/json')
@@ -50,8 +73,34 @@ describe('New user creation', function(){
         done();
     });
   });
+  it('should automatically prepend a "1" to a 10-digit phone number.', function(done){
+    var newUser = {
+      username: 'phonetest',
+      password: 'capncruch',
+      phone: '5555551212'
+    };
+    request(oaktree.server)
+      .post('/user/new/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(newUser))
+      .end(function(err, res){
+        console.log('new user', res.text);
+        console.log('new user2', res.body);
+        done();
+    });
+  });
+
+  it('should automatically friend the user to svnh, guy, and hatch', function(done){
+    request(oaktree.server)
+      .get('/friend/' + usersArray[0])
+      .end(function(err, res){
+        var friends = JSON.parse(res.res.body);
+        console.log(friends);
+      });
+  });
 });
 
+/*
 describe('User login', function(){
   oaktree.User.find().remove({});
   var user2 = {
@@ -387,7 +436,6 @@ describe('Friend requests ', function(){
             request(oaktree.server)
               .get('/friends/add/'+userIds[0]+'/'+userIds[1])
               .end(function(err, res){
-                  console.log('usr', userIds);
                   done();
               });
       });
@@ -446,21 +494,47 @@ describe('Friend requests ', function(){
           });
      });
   });
-
-  // it('should have the correct statuses for all user 2', function(done){
-  //   request(oaktree.server)
-  //     .get('/friends/' + userIds[2])
-  //     .end(function(err, res){
-  //       var response = JSON.parse(res.res.text);
-  //       console.log('res', JSON.parse(res.res.text));
-  //       assert.equal(response[0].status, -2);
-  //       assert.equal(response[1].status, -1);
-  //       assert.equal(response[2].status, 2);
-  //       done();
-  //     });
-  // });
+  it('should change the status -2 for the inviter if the invitee rejects the friend request.', function(done){
+    request(oaktree.server)
+      .get('/friends/deny/'+ userIds[0] +'/'+ userIds[1])
+      .end(function(err, res){
+        var friends = JSON.parse(res.res.text);
+        assert.equal(friends[0]._id, userIds[0]);
+        assert.equal(friends[0].status, '-2');
+        done();
+     });
+  });
+  it("should change the status -1 for the invitee on the inviter's friend list if the invitee rejects the friend request.", function(done){
+    request(oaktree.server)
+      .get('/friends/deny/'+ userIds[0] +'/'+ userIds[1])
+      .end(function(err, res){
+        request(oaktree.server)
+          .get('/friends/'+ userIds[0])
+          .end(function(err, res){
+            var friends = JSON.parse(res.res.text);
+            assert.equal(friends[0]._id, userIds[1]);
+            assert.equal(friends[0].status, '-1');
+            done();
+          });
+     });
+  });
+  it("should change the status 2 for both users if the invitee friends a previously denied inviter.", function(done){
+    request(oaktree.server)
+      .get('/friends/deny/'+ userIds[0] +'/'+ userIds[1])
+      .end(function(err, res){
+        request(oaktree.server)
+          .get('/friends/add/'+ userIds[1] +'/'+ userIds[0])
+          .end(function(err, res){
+            var friends = JSON.parse(res.res.text);
+            console.log("NAMMME?", friends[0].username);
+            assert.equal(friends[0]._id, userIds[1]);
+            assert.equal(friends[0].status, '2');
+            done();
+          });
+     });
+  });
 });
-
+*/
 // var deferred = Q.defer();
 // request({
 //   method: 'GET',
