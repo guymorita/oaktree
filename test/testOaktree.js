@@ -153,6 +153,7 @@ describe('Retrieve messages', function(){
   var message1 = {
     sender_id: 132,
     sender_name: 'Guy',
+    deviceToken: '11',
     receiver_ids: [555],
     title: 'herro',
     content: 'world',
@@ -164,6 +165,7 @@ describe('Retrieve messages', function(){
   var message2 = {
     sender_id: 111,
     sender_name: 'Al',
+    deviceToken: '12121',
     receiver_ids: [555],
     title: 'sup dude',
     content: 'you know how it is',
@@ -175,6 +177,7 @@ describe('Retrieve messages', function(){
   var message3 = {
     sender_id: 111,
     sender_name: 'Savannah',
+    deviceToken: '121',
     receiver_ids: [5],
     title: 'super duper',
     content: 'test',
@@ -184,8 +187,9 @@ describe('Retrieve messages', function(){
     }
   };
   var messageArray = [message1, message2, message3];
-  var messageRes = [];
-  before(function(done){
+  var messageRes;
+  beforeEach(function(done){
+    messageRes = [];
     oaktree.Message.find().remove({});
     async.eachSeries(messageArray,
       function(message, callback){
@@ -207,10 +211,9 @@ describe('Retrieve messages', function(){
     request(oaktree.server).get('/message/retrieve/555')
       .end(function(err, res){
         expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
-        assert.equal(JSON.parse(res.res.text).inbox[1]._id, messageRes[0]);
-        assert.equal(JSON.parse(res.res.text).inbox[0]._id, messageRes[1]);
+        assert.notEqual(JSON.parse(res.res.text).inbox[0]._id, messageRes[2]);
+        assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[2]);
         assert.equal(JSON.parse(res.res.text).inbox[1].receiver_id, 555);
-        assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[1]);
         done();
       });
   });
@@ -300,16 +303,27 @@ describe('Read messages', function(){
             done();
           });
       }
-      );
+    );
   });
   it('should mark the message as read.', function(done){
     request(oaktree.server).get('/message/retrieve/555')
       .end(function(err, res){
         resInbox = JSON.parse(res.res.text).inbox;
-        assert.equal(resInbox[0]._id, messageRes[1]);
-        assert.equal(resInbox[1]._id, messageRes[0]);
-        assert.equal(resInbox[1].status, 1);
-        assert.equal(resInbox[0].status, 0);
+
+        var guy_index, al_index;
+        for(var i=0; i<resInbox.length; i++) {
+          if(resInbox[i].sender_id === '132') {
+            guy_index = i;
+          }
+          if(resInbox[i].sender_id === '111') {
+            al_index = i;
+          }
+        }
+
+        assert.equal(resInbox[guy_index]._id, messageRes[0]);
+        assert.equal(resInbox[al_index]._id, messageRes[1]);
+        assert.equal(resInbox[guy_index].status, 1);
+        assert.equal(resInbox[al_index].status, 0);
         done();
       });
   });
@@ -317,33 +331,43 @@ describe('Read messages', function(){
     request(oaktree.server).get('/message/retrieve/555')
       .end(function(err, res){
         expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
-        assert.equal(JSON.parse(res.res.text).inbox[0]._id, messageRes[1]);
-        assert.equal(JSON.parse(res.res.text).inbox[1]._id, messageRes[0]);
         done();
       });
   });
 });
 
-describe('friending', function(){
+//when user a friends user b, user b is now in user a's friend list
+//with a status 1, user a is now in user b's friend list with a status
+//zero, user b should get a friend request
+
+//when user b accepts user a's friend request both users status should be 2
+
+//if user b denies user a, user b is now -1 on user a's friend list and user
+//a is now -2 on user b's friend list
+
+//if user b tries to friend user a, they automatically become friends
+
+
+describe('Friend requests ', function(){
   var user0 = {
-    username: 'kyle',
-    password: '123'
+    username: 'al',
+    password: '123',
+    deviceToken: '121'
   };
   var user1 = {
-    username: 'bob',
-    password: '234'
+    username: 'svnh',
+    password: '234',
+    deviceToken: '112'
   };
   var user2 = {
-    username: 'josh',
-    password: 'sdk'
+    username: 'guy',
+    password: '151',
+    deviceToken: '122'
   };
-  var user3 = {
-    username: 'tuhin',
-    password: '0ee'
-  };
-  var usersArray = [user0, user1, user2, user3];
-  var userIds = [];
-  before(function(done){
+  var usersArray = [user0, user1];
+  var userIds;
+  beforeEach(function(done){
+    userIds = [];
     oaktree.User.find().remove({});
     oaktree.Message.find().remove({});
     async.eachSeries(usersArray,
@@ -360,99 +384,81 @@ describe('friending', function(){
           });
       },
       function(err){
-        async.series([
-          function(callback){
             request(oaktree.server)
               .get('/friends/add/'+userIds[0]+'/'+userIds[1])
               .end(function(err, res){
-                callback(null, JSON.parse(res.res.text));
+                  console.log('usr', userIds)
+                  done();
               });
-          },
-          function(callback){
-            request(oaktree.server)
-              .get('/friends/add/'+userIds[1]+'/'+userIds[2])
-              .end(function(err, res){
-                callback(null, JSON.parse(res.res.text));
-              });
-          },
-          function(callback){
-            request(oaktree.server)
-              .get('/friends/add/'+userIds[3]+'/'+userIds[2])
-              .end(function(err, res){
-                callback(null, JSON.parse(res.res.text));
-              });
-          },
-          function(callback){
-            request(oaktree.server)
-              .get('/friends/add/'+userIds[2]+'/'+userIds[0])
-              .end(function(err, res){
-                callback(null, JSON.parse(res.res.text));
-              });
-          },
-          function(callback){
-            request(oaktree.server)
-              .get('/friends/accept/'+userIds[3]+'/'+userIds[2])
-              .end(function(err, res){
-                callback(null, JSON.parse(res.res.text));
-              });
-          },
-          function(callback){
-            request(oaktree.server)
-              .get('/friends/accept/'+userIds[0]+'/'+userIds[1])
-              .end(function(err, res){
-                callback(null, JSON.parse(res.res.text));
-              });
-          },
-          function(callback){
-            request(oaktree.server)
-              .get('/friends/deny/'+userIds[1]+'/'+userIds[2])
-              .end(function(err, res){
-                callback(null, JSON.parse(res.res.text));
-              });
-          },
-          function(callback){
-            request(oaktree.server)
-              .get('/friends/deny/'+userIds[2]+'/'+userIds[0])
-              .end(function(err, res){
-                callback(null, JSON.parse(res.res.text));
-              });
-          },
-          function(callback){
-            request(oaktree.server)
-              .get('/friends/add/'+userIds[1]+'/'+userIds[3])
-              .end(function(err, res){
-                callback(null, JSON.parse(res.res.text));
-              });
-          }
-        ],
-        function(err, results){
-          console.log('results', results);
-          done();
-        });
       });
-    // create 4 users
-    // invite, friend, deny. test all states of the app
   });
-  it('should have everyone else in user 1s friend list (not counting status)', function(done){
+  it("should add the invitee to the user's friends list with a status of 0", function(done){
+    request(oaktree.server)
+      .get('/friends/'+ userIds[0])
+      .end(function(err, res){
+        assert.equal(JSON.parse(res.res.text).length, 1);
+        assert.equal(JSON.parse(res.res.text)[0]._id, userIds[1]);
+        assert.equal(JSON.parse(res.res.text)[0].status, '0');
+        done();
+      });
+  });
+  it("should add the inviter to the invitee's friend list with a status of 1.", function(done){
     request(oaktree.server)
       .get('/friends/'+ userIds[1])
       .end(function(err, res){
-        assert.equal(JSON.parse(res.res.text).length, 3);
+        assert.equal(JSON.parse(res.res.text).length, 1);
+        assert.equal(JSON.parse(res.res.text)[0]._id, userIds[0]);
+        assert.equal(JSON.parse(res.res.text)[0].status, '1');
         done();
       });
   });
-  it('should have the correct statuses for all user 2', function(done){
+  it('should change the status to 2 for both users if the invitee accepts the friend request.', function(done){
     request(oaktree.server)
-      .get('/friends/' + userIds[2])
+      .get('/friends/accept/'+ userIds[0]+'/'+userIds[1])
       .end(function(err, res){
-        var response = JSON.parse(res.res.text);
-        console.log('res', JSON.parse(res.res.text));
-        assert.equal(response[0].status, -2);
-        assert.equal(response[1].status, -1);
-        assert.equal(response[2].status, 2);
-        done();
-      });
+        var friends = JSON.parse(res.res.text);
+        assert.equal(friends[0]._id, userIds[0]);
+        assert.equal(friends[0].status, '2');
+        request(oaktree.server)
+          .get('/friends/'+ userIds[0])
+          .end(function(err, res){
+            var friends = JSON.parse(res.res.text);
+            assert.equal(friends[0]._id, userIds[1]);
+            assert.equal(friends[0].status, '2');
+            done();
+          });
+     });
   });
+  it('should change the status 2 for both users if the invitee also adds the inviter as a friend.', function(done){
+    request(oaktree.server)
+      .get('/friends/add/'+ userIds[1]+'/'+userIds[0])
+      .end(function(err, res){
+        var friends = JSON.parse(res.res.text);
+        assert.equal(friends[0]._id, userIds[0]);
+        assert.equal(friends[0].status, '2');
+        request(oaktree.server)
+          .get('/friends/'+ userIds[0])
+          .end(function(err, res){
+            var friends = JSON.parse(res.res.text);
+            assert.equal(friends[0]._id, userIds[1]);
+            assert.equal(friends[0].status, '2');
+            done();
+          });
+     });
+  });
+
+  // it('should have the correct statuses for all user 2', function(done){
+  //   request(oaktree.server)
+  //     .get('/friends/' + userIds[2])
+  //     .end(function(err, res){
+  //       var response = JSON.parse(res.res.text);
+  //       console.log('res', JSON.parse(res.res.text));
+  //       assert.equal(response[0].status, -2);
+  //       assert.equal(response[1].status, -1);
+  //       assert.equal(response[2].status, 2);
+  //       done();
+  //     });
+  // });
 });
 
 // var deferred = Q.defer();
