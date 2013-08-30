@@ -13,11 +13,11 @@ global.md5 = require('MD5');     // md5 hash used to create random confirmation 
 
 global.db = require('./config/db-schema.js').mongodb();
 // local env
-// mongoose.connect('mongodb://localhost/squirrel');
+mongoose.connect('mongodb://localhost/squirrel');
 
 // staging env
 // mongoose.connect(process.env.MONGO_STAGINGDB);
-mongoose.connect('mongodb://nodejitsu_deeznutz:147iso2dksto8gbbq9klpk7i75@ds039267.mongolab.com:39267/nodejitsu_deeznutz_nodejitsudb2687562622');
+//mongoose.connect('mongodb://nodejitsu_deeznutz:147iso2dksto8gbbq9klpk7i75@ds039267.mongolab.com:39267/nodejitsu_deeznutz_nodejitsudb2687562622');
 
 // production env
 // mongoose.connect(process.env.MONGO_PRODUCTIONDB);
