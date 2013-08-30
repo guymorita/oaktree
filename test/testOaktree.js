@@ -31,6 +31,7 @@ describe('New user creation', function(){
   var userIds = [];
 
   beforeEach(function(done){
+    userIds = [];
     oaktree.User.find().remove({});
     async.eachSeries(usersArray,
         function(user, callback){
@@ -77,30 +78,46 @@ describe('New user creation', function(){
     var newUser = {
       username: 'phonetest',
       password: 'capncruch',
-      phone: '5555551212'
+      phone: '5556661212'
     };
     request(oaktree.server)
       .post('/user/new/')
       .set('content-type', 'application/json')
       .send(JSON.stringify(newUser))
       .end(function(err, res){
-        console.log('new user', res.text);
-        console.log('new user2', res.body);
+        assert.equal(res.body.phone, '15556661212');
         done();
     });
   });
-
+  it('should strip non-numbers from phone numbers.', function(done){
+    var newUser = {
+      username: 'phonetest',
+      password: 'capncruch',
+      phone: '555-666.1212'
+    };
+    request(oaktree.server)
+      .post('/user/new/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(newUser))
+      .end(function(err, res){
+        assert.equal(res.body.phone, '15556661212');
+        done();
+    });
+  });
   it('should automatically friend the user to svnh, guy, and hatch', function(done){
     request(oaktree.server)
-      .get('/friend/' + usersArray[0])
+      .get('/friends/' + userIds[3])
       .end(function(err, res){
-        var friends = JSON.parse(res.res.body);
-        console.log(friends);
+        var friends = res.body;
+        assert.equal(friends.length, 3);
+        assert.equal(friends[0].status, '2');
+        assert.equal(friends[1].status, '2');
+        assert.equal(friends[2].status, '2');
+        done();
       });
   });
 });
 
-/*
 describe('User login', function(){
   oaktree.User.find().remove({});
   var user2 = {
@@ -527,14 +544,14 @@ describe('Friend requests ', function(){
           .end(function(err, res){
             var friends = JSON.parse(res.res.text);
             console.log("NAMMME?", friends[0].username);
-            assert.equal(friends[0]._id, userIds[1]);
+            assert.equal(friends[0]._id, userIds[0]);
             assert.equal(friends[0].status, '2');
             done();
           });
      });
   });
 });
-*/
+
 // var deferred = Q.defer();
 // request({
 //   method: 'GET',

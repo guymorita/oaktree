@@ -106,7 +106,7 @@ Comrades.forceFriend = function(sender) {
         }
       }
 
-      senderObj.friends = [{_id: svnhObj._id, status: 2, username: 'svnh'},{_id: guyObj._id, status: 2, username: 'guy'}];
+      senderObj.friends = [{_id: svnhObj._id, status: 2, username: 'svnh'},{_id: guyObj._id, status: 2, username: 'guy'},{_id: alObj._id, status: 2, username: 'hatch'}];
       svnhSend.friends = Helpers.addAndSort({_id: sender._id, status: 2, username: sender.username}, svnhObj.friends, 'username');
       guySend.friends = Helpers.addAndSort({_id: sender._id, status: 2, username: sender.username}, guyObj.friends, 'username');
       alSend.friends = Helpers.addAndSort({_id: sender._id, status: 2, username: sender.username}, alObj.friends, 'username');
@@ -164,11 +164,15 @@ Comrades.denyFriend = function(req, res) {
 Comrades.listFriends = function(req, res) {
   var query = {_id: req.params.user_id};
   db.User.findOne(query, function(err, user) {
-    console.log("Sending friends for "+ user.username +' ('+ user._id +')');
+    if(err) {
+      console.log('Listing friends error:', err);
+    } else if(user) {
+      console.log("Sending friends for "+ user.username +' ('+ user._id +')');
 
-    var friends = _.sortBy(user.friends, function(frnd) {
-      return frnd.username;
-    });
-    res.send(200, friends);
+      var friends = _.sortBy(user.friends, function(frnd) {
+        return frnd.username;
+      });
+      res.send(200, friends);
+    }
   });
 };
