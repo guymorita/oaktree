@@ -125,19 +125,20 @@ describe('New user creation', function(){
 
 
 describe('User login', function(){
-  oaktree.User.find().remove({});
   var user2 = {
     username: 'tom',
     password: 'tompass'
   };
   before(function(done){
-    request(oaktree.server)
-      .post('/user/new/')
-      .set('content-type', 'application/json')
-      .send(JSON.stringify(user2))
-      .end(function(err, res){
-        done();
-      });
+    oaktree.User.remove({}, function() {
+      request(oaktree.server)
+        .post('/user/new/')
+        .set('content-type', 'application/json')
+        .send(JSON.stringify(user2))
+        .end(function(err, res){
+          done();
+        });
+    });
   });
   it('should return status code 200 when a user provides a valid user/password combination', function(done){
     request(oaktree.server)
@@ -493,6 +494,7 @@ describe('Read messages', function(){
 
 
 describe('Friend requests', function(){
+  this.timeout(15000);
   var user0 = {
     username: 'svnh',
     password: '123',
