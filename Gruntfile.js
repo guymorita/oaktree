@@ -1,7 +1,6 @@
+'use strict';
 
 module.exports = function(grunt){
-  'use strict';
-
   var files = {
     src: 'config/*.js',
     tests: 'test/*.js'
@@ -34,6 +33,11 @@ module.exports = function(grunt){
       coverage: {
         src: [files.tests],
         options:{
+          coverage: true
+        }
+      },
+      coveralls: {
+        options: {
           coveralls: {
             serviceName: 'travis-ci',
             repoToken: process.env.OAKTREE_COVERALLS_REPO_TOKEN
