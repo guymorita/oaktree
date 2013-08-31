@@ -64,17 +64,7 @@ describe('New user creation', function(){
         done();
     });
   });
-  it('should return an existing user message if a username already exists', function(done){
-    request(oaktree.server)
-      .post('/user/new/')
-      .set('content-type', 'application/json')
-      .send(JSON.stringify(user0))
-      .end(function(err, res){
-        assert.equal(res.text, "Username already exists, please choose another name.");
-        done();
-    });
-  });
-  it('should automatically prepend a "1" to a 10-digit phone number.', function(done){
+   it('should automatically prepend a "1" to a 10-digit phone number.', function(done){
     var newUser = {
       username: 'phonetest',
       password: 'capncruch',
@@ -490,7 +480,7 @@ describe('Read messages', function(){
   });
 });
 
-//
+
 //when user a friends user b, user b is now in user a's friend list
 //with a status 1, user a is now in user b's friend list with a status
 //zero, user b should get a friend request
