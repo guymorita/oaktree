@@ -490,6 +490,7 @@ describe('Read messages', function(){
   });
 });
 
+//
 //when user a friends user b, user b is now in user a's friend list
 //with a status 1, user a is now in user b's friend list with a status
 //zero, user b should get a friend request
