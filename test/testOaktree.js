@@ -494,23 +494,38 @@ describe('Read messages', function(){
 
 describe('Friend requests', function(){
   var user0 = {
-    username: 'al',
+    username: 'svnh',
     password: '123',
     deviceToken: '121'
   };
   var user1 = {
-    username: 'svnh',
+    username: 'guy',
     password: '234',
     deviceToken: '112'
   };
   var user2 = {
-    username: 'guy',
+    username: 'al',
     password: '151',
     deviceToken: '122'
   };
-  var usersArray = [user0, user1];
+  var user3 = {
+    username: 'max',
+    password: '151',
+    deviceToken: '122'
+  };
+  var user4 = {
+    username: 'tuhin',
+    password: '151',
+    deviceToken: '122'
+  };
+  var user5 = {
+    username: 'phillip',
+    password: '151',
+    deviceToken: '122'
+  };
+  var usersArray = [user0, user1, user2, user3, user4, user5];
   var userIds;
-  beforeEach(function(done){
+  before(function(done){
     oaktree.User.remove({}, function(){
       userIds = [];
       async.eachSeries(usersArray,
@@ -528,7 +543,15 @@ describe('Friend requests', function(){
               request(oaktree.server)
                 .get('/friends/add/'+userIds[0]+'/'+userIds[1])
                 .end(function(err, res){
-                    done();
+                    request(oaktree.server)
+                    .get('/friends/add/'+userIds[2]+'/'+userIds[3])
+                    .end(function(err, res){
+                        request(oaktree.server)
+                        .get('/friends/add/'+userIds[4]+'/'+userIds[5])
+                        .end(function(err, res){
+                            done();
+                        });
+                    });
                 });
         });
     });
@@ -572,59 +595,58 @@ describe('Friend requests', function(){
   });
   it('should change the status 2 for both users if the invitee also requests the inviter as a friend.', function(done){
     request(oaktree.server)
-      .get('/friends/add/'+ userIds[1]+'/'+userIds[0])
+      .get('/friends/add/'+ userIds[3]+'/'+userIds[2])
       .end(function(err, res){
         var friends = JSON.parse(res.res.text);
-        assert.equal(friends[0]._id, userIds[0]);
+        assert.equal(friends[0]._id, userIds[2]);
         assert.equal(friends[0].status, '2');
         request(oaktree.server)
-          .get('/friends/'+ userIds[0])
+          .get('/friends/'+ userIds[2])
           .end(function(err, res){
-            var friends = JSON.parse(res.res.text);
-            assert.equal(friends[0]._id, userIds[1]);
-            assert.equal(friends[0].status, '2');
+            var friends2 = JSON.parse(res.res.text);
+            assert.equal(friends2[0]._id, userIds[3]);
+            assert.equal(friends2[0].status, '2');
             done();
           });
      });
   });
   it('should change the status -2 for the inviter if the invitee denies the friend request.', function(done){
     request(oaktree.server)
-      .get('/friends/deny/'+ userIds[0] +'/'+ userIds[1])
+      .get('/friends/deny/'+ userIds[4] +'/'+ userIds[5])
       .end(function(err, res){
         var friends = JSON.parse(res.res.text);
-        assert.equal(friends[0]._id, userIds[0]);
+        assert.equal(friends[0]._id, userIds[4]);
         assert.equal(friends[0].status, '-2');
         done();
      });
   });
   it("should change the status to -1 for the invitee on the inviter's friend list if the invitee rejects the friend request.", function(done){
     request(oaktree.server)
-      .get('/friends/deny/'+ userIds[0] +'/'+ userIds[1])
+      .get('/friends/'+ userIds[4])
       .end(function(err, res){
-        request(oaktree.server)
-          .get('/friends/'+ userIds[0])
-          .end(function(err, res){
-            var friends = JSON.parse(res.res.text);
-            assert.equal(friends[0]._id, userIds[1]);
-            assert.equal(friends[0].status, '-1');
-            done();
-          });
-     });
+        var friends = JSON.parse(res.res.text);
+        assert.equal(friends[0]._id, userIds[5]);
+        assert.equal(friends[0].status, '-1');
+        done();
+      });
   });
   it("should change the status 2 for both users (make them friends) if the invitee friends a previously denied inviter.", function(done){
     request(oaktree.server)
-      .get('/friends/deny/'+ userIds[0] +'/'+ userIds[1])
+      .get('/friends/add/'+ userIds[5] +'/'+ userIds[4])
       .end(function(err, res){
+        var friends = JSON.parse(res.res.text);
+        assert.equal(friends[0]._id, userIds[4]);
+        assert.equal(friends[0].status, '2');
+
         request(oaktree.server)
-          .get('/friends/add/'+ userIds[1] +'/'+ userIds[0])
+          .get('/friends/'+ userIds[4])
           .end(function(err, res){
             var friends = JSON.parse(res.res.text);
-            console.log("NAMMME?", friends[0].username);
-            assert.equal(friends[0]._id, userIds[0]);
+            assert.equal(friends[0]._id, userIds[5]);
             assert.equal(friends[0].status, '2');
             done();
           });
-     });
+      });
   });
 });
 
