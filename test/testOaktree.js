@@ -8,7 +8,7 @@ var oaktree = require('../app.js');
 
 var request = require('supertest');
 
-
+/*
 describe('New user creation', function(){
   var f0 = {
     username: 'hatch',
@@ -22,31 +22,31 @@ describe('New user creation', function(){
     username: 'guy',
     password: 'guy'
   };
-  var user1 = {
+  var user0 = {
     username: 'bob',
     password: 'bobpass'
   };
 
-  var usersArray = [f0, f1, f2, user1];
+  var usersArray = [f0, f1, f2];
   var userIds = [];
 
   beforeEach(function(done){
     userIds = [];
     oaktree.User.remove({}, function(){
-      async.eachSeries(usersArray,
-          function(user, callback){
-            request(oaktree.server)
-              .post('/user/new/')
-              .set('content-type', 'application/json')
-              .send(JSON.stringify(user))
-              .end(function(err, res){
-                userIds.push(JSON.parse(res.text)._id);
-                callback();
-              });
-          },
-          function(err){
+      oaktree.User.create(usersArray, function(err, f0, f1, f2) {
+        userIds.push(f0._id);
+        userIds.push(f1._id);
+        userIds.push(f2._id);
+
+        request(oaktree.server)
+          .post('/user/new/')
+          .set('content-type', 'application/json')
+          .send(JSON.stringify(user0))
+          .end(function(err, res){
+            userIds.push(JSON.parse(res.text)._id);
             done();
           });
+      });
     });
   });
   it('should create a new user when it receives a post request to make a user', function(done){
@@ -59,7 +59,7 @@ describe('New user creation', function(){
     request(oaktree.server)
       .post('/user/new/')
       .set('content-type', 'application/json')
-      .send(JSON.stringify(user1))
+      .send(JSON.stringify(user0))
       .end(function(err, res){
         assert.equal(res.statusCode, "400");
         done();
@@ -69,7 +69,7 @@ describe('New user creation', function(){
     request(oaktree.server)
       .post('/user/new/')
       .set('content-type', 'application/json')
-      .send(JSON.stringify(user1))
+      .send(JSON.stringify(user0))
       .end(function(err, res){
         assert.equal(res.text, "Username already exists, please choose another name.");
         done();
@@ -92,7 +92,7 @@ describe('New user creation', function(){
   });
   it('should strip non-numbers from phone numbers.', function(done){
     var newUser = {
-      username: 'phonetest',
+      username: 'phonetest2',
       password: 'capncruch',
       phone: '555-666.1212'
     };
@@ -106,7 +106,6 @@ describe('New user creation', function(){
     });
   });
   it('should automatically friend the user to svnh, guy, and hatch', function(done){
-
     var tomasUser = {
       username: 'tomas',
       password: 'capncruch'
@@ -118,33 +117,31 @@ describe('New user creation', function(){
       .end(function(err, res){
       var tomasId = res.body._id;
 
-      request(oaktree.server)
-        .get('/friends/' + tomasId)
-        .end(function(err, res){
-          var friends = res.body;
-          console.log('friends', friends);
-          assert.equal(friends.length, 3);
-          assert.equal(friends[0].status, '2');
-          assert.equal(friends[1].status, '2');
-          assert.equal(friends[2].status, '2');
-          done();
-        });
-
+        // using a settimeout because the server needs time to auto-friend
+      setTimeout(function(){
+        request(oaktree.server)
+          .get('/friends/' + tomasId)
+          .end(function(err, res){
+            var friends = res.body;
+            assert.equal(friends.length, 3);
+            assert.equal(friends[0].status, '2');
+            assert.equal(friends[1].status, '2');
+            assert.equal(friends[2].status, '2');
+            done();
+          });
+      }, 800);
     });
-
-
-
   });
 });
 
-/*
+
 describe('User login', function(){
   oaktree.User.find().remove({});
   var user2 = {
     username: 'tom',
     password: 'tompass'
   };
-  beforeEach(function(done){
+  before(function(done){
     request(oaktree.server)
       .post('/user/new/')
       .set('content-type', 'application/json')
@@ -163,12 +160,31 @@ describe('User login', function(){
         done();
     });
   });
-  it('should return status code 401 when a user provides a invalid user/password combination', function(done){
-    user2.password = 'noprease';
+  it('should return status code 401 when a user provides the wrong password', function(done){
+    var wrongPass = {
+      username: 'tom',
+      password: 'password'
+    };
+
     request(oaktree.server)
       .post('/user/login/')
       .set('content-type', 'application/json')
-      .send(JSON.stringify(user2))
+      .send(JSON.stringify(wrongPass))
+      .end(function(err, res){
+        assert.equal(res.statusCode, "401");
+        done();
+    });
+  });
+  it('should also return status code 401 when a user provides an invalid username', function(done){
+    var invalidUser = {
+      username: 'decartes',
+      password: 'cogitoergosum'
+    };
+
+    request(oaktree.server)
+      .post('/user/login/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(invalidUser))
       .end(function(err, res){
         assert.equal(res.statusCode, "401");
         done();
@@ -176,18 +192,18 @@ describe('User login', function(){
   });
 });
 
+
 describe('Sent messages', function(){
   var message = {
-    sender_id: 132,
-    sender_name: 'Al',
+    sender_id: 666,
+    sender_name: 'al',
     receiver_ids: [555],
     content: "message from al",
-    title: "hi herro prease",
+    title: "hi harro prease?",
     latlng: {"lat":37.785385,"lng":-122.429747}
   };
   var message_id = null;
-  beforeEach(function(done){
-    oaktree.Message.find().remove({});
+  before(function(done){
     request(oaktree.server)
       .post('/message/')
       .set('content-type', 'application/json')
@@ -199,44 +215,78 @@ describe('Sent messages', function(){
   });
   it('should embed the correct sender id to the message', function(done){
     oaktree.Message.findOne({_id: message_id }, function(err, item) {
-      assert.equal(item.sender_id, 132);
-      assert.notEqual(item.sender_id, 555);
+      assert.equal(item.sender_id, '666');
+      assert.notEqual(item.sender_id, '555');
       done();
     });
   });
   it('should embed the correct receiver id to the message', function(done){
     oaktree.Message.findOne({_id: message_id }, function(err, item) {
-      assert.equal(item.receiver_id, 555);
-      assert.notEqual(item.receiver_id, 666);
+      assert.equal(item.receiver_id, '555');
+      assert.notEqual(item.receiver_id, '666');
       done();
     });
   });
-  it('should embed the correct message', function(done){
-    // oaktree.User.findOne({name:'bob'}, function(err, res){
+  it('should embed the correct message content', function(done){
       oaktree.Message.findOne({_id: message_id }, function(err, item) {
         assert.equal(item.content, "message from al");
-        assert.notEqual(item.content, "hello");
+        assert.notEqual(item.content, "hi harro prease?");
         done();
       });
   });
-  it('should set the message to unread', function(done){
-    // oaktree.User.findOne({name:'bob'}, function(err, res){
+  it('should initialise the message to unread', function(done){
       oaktree.Message.findOne({_id: message_id }, function(err, item) {
         assert.equal(item.status, 0);
         done();
       });
   });
   it('should not be cleared', function(done){
-    // oaktree.User.findOne({name:'bob'}, function(err, res){
       oaktree.Message.findOne({_id: message_id }, function(err, item) {
         assert.equal(item.cleared, false);
         done();
       });
   });
+  it('should be able to send to multiple users', function(done){
+    var multi = {
+      sender_id: 666,
+      sender_name: 'al',
+      receiver_ids: [77, 88],
+      content: "greetings 77 and 88!",
+      title: "hello to two",
+      latlng: {"lat":37.785385,"lng":-122.429747}
+    };
+
+    setTimeout(function(){
+    request(oaktree.server)
+      .post('/message/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(multi))
+      .end(function(err, res){
+        oaktree.Message.findOne({receiver_id: '77' }, function(err, item) {
+          assert.equal(item.sender_id, '666');
+          assert.notEqual(item.sender_id, '88');
+          assert.equal(item.content, 'greetings 77 and 88!');
+
+          request(oaktree.server)
+            .post('/message/')
+            .set('content-type', 'application/json')
+            .send(JSON.stringify(multi))
+            .end(function(err, res){
+              oaktree.Message.findOne({receiver_id: '88' }, function(err, item) {
+                assert.equal(item.sender_id, '666');
+                assert.notEqual(item.sender_id, '77');
+                assert.equal(item.content, 'greetings 77 and 88!');
+                done();
+              });
+            });
+        });
+      });
+    }, 500);
+  });
 });
 
 describe('Retrieve messages', function(){
-  var message1 = {
+  var message0 = {
     sender_id: 132,
     sender_name: 'Guy',
     deviceToken: '11',
@@ -248,8 +298,8 @@ describe('Retrieve messages', function(){
       lng: -54
     }
   };
-  var message2 = {
-    sender_id: 111,
+  var message1 = {
+    sender_id: 666,
     sender_name: 'Al',
     deviceToken: '12121',
     receiver_ids: [555],
@@ -260,11 +310,23 @@ describe('Retrieve messages', function(){
       lng: -84
     }
   };
-  var message3 = {
+  var message2 = {
     sender_id: 111,
     sender_name: 'Savannah',
     deviceToken: '121',
     receiver_ids: [5],
+    title: 'not for 555',
+    content: 'test',
+    latlng: {
+      lat: 58,
+      lng: -82
+    }
+  };
+  var message3 = {
+    sender_id: 111,
+    sender_name: 'Savannah',
+    deviceToken: '121',
+    receiver_ids: [555, 777],
     title: 'super duper',
     content: 'test',
     latlng: {
@@ -272,47 +334,52 @@ describe('Retrieve messages', function(){
       lng: -82
     }
   };
-  var messageArray = [message1, message2, message3];
-  var messageRes;
+  var messageArray = [message0, message1, message2, message3];
+  var messageRes = [];
   beforeEach(function(done){
-    messageRes = [];
-    oaktree.Message.find().remove({});
-    async.eachSeries(messageArray,
-      function(message, callback){
-        request(oaktree.server)
-          .post('/message/')
-          .set('content-type', 'application/json')
-          .send(JSON.stringify(message))
-          .end(function(err, res){
-            messageRes.push(JSON.parse(res.res.text)[0]._id);
-            callback();
-          });
-      },
-      function(err){
-        done();
-      }
-      );
+    oaktree.Message.remove({}, function(){
+      messageRes = [];
+      async.eachSeries(messageArray,
+        function(message, callback){
+          request(oaktree.server)
+            .post('/message/')
+            .set('content-type', 'application/json')
+            .send(JSON.stringify(message))
+            .end(function(err, res){
+              messageRes.push(JSON.parse(res.res.text)[0]._id);
+              callback();
+            });
+        },
+        function(err){
+          done();
+        });
+    });
   });
   it('should retrieve messages for the user.', function(done){
     request(oaktree.server).get('/message/retrieve/555')
-      .end(function(err, res){
-        expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
-        assert.notEqual(JSON.parse(res.res.text).inbox[0]._id, messageRes[2]);
-        assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[2]);
-        assert.equal(JSON.parse(res.res.text).inbox[1].receiver_id, 555);
-        done();
-      });
+        .end(function(err, res){
+          expect(JSON.parse(res.res.text).inbox.length).to.eql(3);
+          assert.notEqual(JSON.parse(res.res.text).inbox[0]._id, messageRes[2]);
+          assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[2]);
+          assert.notEqual(JSON.parse(res.res.text).inbox[2]._id, messageRes[2]);
+          assert.equal(JSON.parse(res.res.text).inbox[0].receiver_id, '555');
+          assert.equal(JSON.parse(res.res.text).inbox[1].receiver_id, '555');
+          assert.equal(JSON.parse(res.res.text).inbox[2].receiver_id, '555');
+          done();
+        });
   });
   it('should retrieve both read and unread messages.', function(done){
     oaktree.Message.update({_id: messageRes[0]}, {$set: {status: 1}}, function(err, count) {
       if(count === 1) {
         request(oaktree.server).get('/message/retrieve/555')
             .end(function(err, res){
-              expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
-              assert.equal(JSON.parse(res.res.text).inbox[1]._id, messageRes[0]);
-              assert.equal(JSON.parse(res.res.text).inbox[0]._id, messageRes[1]);
-              assert.equal(JSON.parse(res.res.text).inbox[1].receiver_id, 555);
-              assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[1]);
+              expect(JSON.parse(res.res.text).inbox.length).to.eql(3);
+              assert.notEqual(JSON.parse(res.res.text).inbox[0]._id, messageRes[2]);
+              assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[2]);
+              assert.notEqual(JSON.parse(res.res.text).inbox[2]._id, messageRes[2]);
+              assert.equal(JSON.parse(res.res.text).inbox[0].receiver_id, '555');
+              assert.equal(JSON.parse(res.res.text).inbox[1].receiver_id, '555');
+              assert.equal(JSON.parse(res.res.text).inbox[2].receiver_id, '555');
               done();
             });
       }
@@ -323,9 +390,9 @@ describe('Retrieve messages', function(){
       if(count === 1) {
         request(oaktree.server).get('/message/retrieve/555')
             .end(function(err, res){
-              expect(JSON.parse(res.res.text).inbox.length).to.eql(1);
-              assert.equal(JSON.parse(res.res.text).inbox[0]._id, messageRes[1]);
-              assert.equal(JSON.parse(res.res.text).inbox[1], undefined);
+              expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
+              assert.notEqual(JSON.parse(res.res.text).inbox[0]._id, messageRes[0]);
+              assert.notEqual(JSON.parse(res.res.text).inbox[0]._id, messageRes[0]);
               done();
             });
       }
@@ -333,8 +400,9 @@ describe('Retrieve messages', function(){
   });
 });
 
+
 describe('Read messages', function(){
-  var message1 = {
+  var message0 = {
     sender_id: 132,
     sender_name: 'Guy',
     receiver_ids: [555],
@@ -345,8 +413,8 @@ describe('Read messages', function(){
       lng: -54
     }
   };
-  var message2 = {
-    sender_id: 111,
+  var message1 = {
+    sender_id: 666,
     sender_name: 'Al',
     receiver_ids: [555],
     title: 'sup dude',
@@ -356,8 +424,8 @@ describe('Read messages', function(){
       lng: -84
     }
   };
-  var message3 = {
-    sender_id: 111,
+  var message2 = {
+    sender_id: 666,
     sender_name: 'Al',
     receiver_ids: [5],
     title: 'super duper',
@@ -367,29 +435,30 @@ describe('Read messages', function(){
       lng: -82
     }
   };
-  var messageArray = [message1, message2, message3];
+  var messageArray = [message0, message1, message2];
   var messageRes = [];
   before(function(done){
-    oaktree.Message.find().remove({});
-    async.eachSeries(messageArray,
-      function(message, callback){
-        request(oaktree.server)
-          .post('/message/')
-          .set('content-type', 'application/json')
-          .send(JSON.stringify(message))
-          .end(function(err, res){
-            messageRes.push(JSON.parse(res.res.text)[0]._id);
-            callback();
-          });
-      },
-      function(err){
-        request(oaktree.server)
-          .get('/message/read/' + messageRes[0])
-          .end(function(err, res){
-            done();
-          });
-      }
-    );
+    oaktree.Message.remove({}, function(){
+      async.eachSeries(messageArray,
+        function(message, callback){
+          request(oaktree.server)
+            .post('/message/')
+            .set('content-type', 'application/json')
+            .send(JSON.stringify(message))
+            .end(function(err, res){
+              messageRes.push(JSON.parse(res.res.text)[0]._id);
+              callback();
+            });
+        },
+        function(err){
+          request(oaktree.server)
+            .get('/message/read/' + messageRes[0])
+            .end(function(err, res){
+              done();
+            });
+        }
+      );
+    });
   });
   it('should mark the message as read.', function(done){
     request(oaktree.server).get('/message/retrieve/555')
@@ -401,15 +470,15 @@ describe('Read messages', function(){
           if(resInbox[i].sender_id === '132') {
             guy_index = i;
           }
-          if(resInbox[i].sender_id === '111') {
+          if(resInbox[i].sender_id === '666') {
             al_index = i;
           }
         }
 
         assert.equal(resInbox[guy_index]._id, messageRes[0]);
         assert.equal(resInbox[al_index]._id, messageRes[1]);
-        assert.equal(resInbox[guy_index].status, 1);
-        assert.equal(resInbox[al_index].status, 0);
+        assert.equal(resInbox[guy_index].status, '1');
+        assert.equal(resInbox[al_index].status, '0');
         done();
       });
   });
@@ -541,7 +610,7 @@ describe('Friend requests', function(){
         done();
      });
   });
-  it("should change the status -1 for the invitee on the inviter's friend list if the invitee rejects the friend request.", function(done){
+  it("should change the status to -1 for the invitee on the inviter's friend list if the invitee rejects the friend request.", function(done){
     request(oaktree.server)
       .get('/friends/deny/'+ userIds[0] +'/'+ userIds[1])
       .end(function(err, res){
@@ -572,6 +641,148 @@ describe('Friend requests', function(){
   });
 });
 */
+
+describe('Phone contacts find', function(){
+
+  var phoneBook = {
+    contacts: [
+      {
+        name: 'guy',
+        phoneNumbers: [
+          {
+            type: 'mobile',
+            value: '12095552121'
+          },
+          {
+            type: 'work',
+            value: '1.415.555.1212'
+          }
+        ]
+      },
+      {
+        name: 'savannah',
+        phoneNumbers: [
+          {
+            type: 'mobile',
+            value: '1 (209) 555-1212'
+          }
+        ]
+      }
+    ]
+  };
+
+  var f0 = {
+    username: 'hatch',
+    password: 'hatchpass',
+    phone: '12125551212'
+  };
+  var f1 = {
+    username: 'svnh',
+    password: 'svnh',
+    phone: '12095551212'
+  };
+  var f2 = {
+    username: 'guy',
+    password: 'guy',
+    phone: '12095552121'
+  };
+  var user0 = {
+    username: 'notinyourbook',
+    password: 'anonymous',
+    phone: '14152225555'
+  };
+
+  var usersArray = [f0, f1, f2, user0];
+  var userIds = [];
+
+  before(function(done){
+    oaktree.User.remove({}, function(){
+      oaktree.User.create(usersArray, function(err, f0, f1, f2, user0) {
+        userIds.push(f0._id);
+        userIds.push(f1._id);
+        userIds.push(f2._id);
+        userIds.push(user0._id);
+        done();
+      });
+    });
+  });
+  it("should return a list of hatch users were are on a person's contact list.", function(done){
+    request(oaktree.server)
+      .post('/user/phonefind/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(phoneBook))
+      .end(function(err, res){
+        var friends = res.body;
+        assert.equal(friends.length, 2);
+        assert.notEqual(friends[0].username, 'notinyourbook');
+        assert.notEqual(friends[1].username, 'notinyourbook');
+        done();
+      });
+  });
+  it("should be able to accept phone numbers in a multitude of formats.", function(done){
+    var alObj = {
+      name: 'al',
+      phoneNumbers: [
+        {
+          type: 'mobile',
+          value: '+1.212.555.1212'
+        },
+        {
+          type: 'home',
+          value: '(510) 555-1212'
+        }
+      ]
+    };
+    phoneBook.contacts.push(alObj);
+
+    request(oaktree.server)
+      .post('/user/phonefind/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(phoneBook))
+      .end(function(err, res){
+        var friends = res.body;
+        assert.equal(friends.length, 3);
+        assert.notEqual(friends[0].username, 'notinyourbook');
+        assert.notEqual(friends[1].username, 'notinyourbook');
+        assert.notEqual(friends[2].username, 'notinyourbook');
+        done();
+      });
+  });
+  it("should return no matches if a user's contacts are not already members.", function(done){
+    var noMatches = {
+      contacts: [
+        {
+          name: 'johnsmith',
+          phoneNumbers: [
+            {
+              type: 'mobile',
+              value: '12223334444'
+            }
+          ]
+        },
+        {
+          name: 'not the awesomest savannah',
+          phoneNumbers: [
+            {
+              type: 'mobile',
+              value: '1 (209) 222-5555'
+            }
+          ]
+        }
+      ]
+    };
+
+    request(oaktree.server)
+      .post('/user/phonefind/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify(noMatches))
+      .end(function(err, res){
+        assert.equal(res.body.length, 0);
+        done();
+      });
+  });
+});
+
 // var deferred = Q.defer();
 // request({
 //   method: 'GET',
