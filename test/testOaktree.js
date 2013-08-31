@@ -8,7 +8,6 @@ var oaktree = require('../app.js');
 
 var request = require('supertest');
 
-/*
 describe('New user creation', function(){
   var f0 = {
     username: 'hatch',
@@ -640,7 +639,6 @@ describe('Friend requests', function(){
      });
   });
 });
-*/
 
 describe('Phone contacts find', function(){
 
