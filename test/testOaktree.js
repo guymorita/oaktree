@@ -7,7 +7,7 @@ var Q = require('q');
 var oaktree = require('../app.js');
 
 var request = require('supertest');
-// work travis
+
 describe('New user creation', function(){
   var f0 = {
     username: 'hatch',
@@ -521,29 +521,27 @@ describe('Friend requests', function(){
   var usersArray = [user0, user1];
   var userIds;
   beforeEach(function(done){
-    userIds = [];
-    oaktree.User.find().remove({});
-    oaktree.Message.find().remove({});
-    async.eachSeries(usersArray,
-      function(userObj, callback){
-        request(oaktree.server)
-          .post('/user/new/')
-          .set('content-type', 'application/json')
-          .send(JSON.stringify(userObj))
-          .end(function(err, res){
-            // console.log('username', userObj.username);
-            // console.log(res.res.text);
-            userIds.push(JSON.parse(res.res.text)._id);
-            callback();
-          });
-      },
-      function(err){
-            request(oaktree.server)
-              .get('/friends/add/'+userIds[0]+'/'+userIds[1])
-              .end(function(err, res){
-                  done();
-              });
-      });
+    oaktree.User.remove({}, function(){
+      userIds = [];
+      async.eachSeries(usersArray,
+        function(userObj, callback){
+          request(oaktree.server)
+            .post('/user/new/')
+            .set('content-type', 'application/json')
+            .send(JSON.stringify(userObj))
+            .end(function(err, res){
+              userIds.push(JSON.parse(res.res.text)._id);
+              callback();
+            });
+        },
+        function(err){
+              request(oaktree.server)
+                .get('/friends/add/'+userIds[0]+'/'+userIds[1])
+                .end(function(err, res){
+                    done();
+                });
+        });
+    });
   });
   it("should add the invitee to the user's friends list with a status of 0", function(done){
     request(oaktree.server)
