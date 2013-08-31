@@ -114,7 +114,6 @@ Hatchers.loginUser = function(req, res) {
             visitorObj = user;
             visitorObj.password = undefined;
             visitorObj.salt = undefined;
-            visitorObj.confirm_code = undefined;
 
             res.header('content-type', 'application/json');
             res.send(200, visitorObj);
