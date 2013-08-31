@@ -19,6 +19,14 @@ Helpers.findAndPluck = function(array, field, match) {
   return array.splice(i, 1);
 };
 
+Helpers.smsCode = function() {
+  var cd = '';
+  for(var i=0; i<4; i++) {
+    cd += Math.floor(Math.random()*10);
+  }
+  return cd;
+};
+
 Helpers.findSenderReceiver = function(sender_id, receiver_id, callback) {
   if(sender_id) { sender_id = sender_id.toString(); }
   if(receiver_id) { receiver_id = receiver_id.toString(); }

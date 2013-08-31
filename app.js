@@ -9,7 +9,6 @@ global.apn = require('apn');
 global.url = require('url');
 global.ObjectId = mongoose.mongo.ObjectID;
 global.pass = require('pwd');
-global.md5 = require('MD5');     // md5 hash used to create random confirmation codes
 
 global.db = require('./config/db-schema.js').mongodb();
 // local env

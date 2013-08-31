@@ -53,7 +53,7 @@ Hatchers.phoneFind = function(req, res) {
 Hatchers.newUser = function(req, res) {
   var uname = (req.body.username).toLowerCase();
   var upass = req.body.password;
-  var code = md5(Math.floor(Math.random()*Date.now()).toString()).substring(0,6);     // for sms confirmation
+  var code = Helpers.smsCode();     // for sms confirmation
   var uphone = (req.body.phone) ? Helpers.sanitizePhone(req.body.phone) : '15555555555';
 
   var newUserObj = {

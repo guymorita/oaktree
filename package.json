@@ -1,6 +1,6 @@
 {
   "name": "oaktree",
-  "version": "0.1.1-46",
+  "version": "0.1.1-63",
   "engine": "node >= 0.8.x",
   "description": "home for squirrels",
   "dependencies": {
@@ -12,8 +12,7 @@
     "azure": "*",
     "apn": "1.3.8",
     "url": "0.7.9",
-    "pwd": "0.0.2",
-    "MD5": "1.1.x"
+    "pwd": "0.0.2"
   },
   "devDependencies": {
     "coveralls": "2.1.x",
@@ -39,7 +38,7 @@
       "pattern": "lib",
       "data-cover-never": "node_modules"
     },
-    "start": "index.js"
+    "start": "app.js"
   },
   "subdomain": "oaktree",
   "engines": {
