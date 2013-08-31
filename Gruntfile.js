@@ -1,6 +1,6 @@
+module.exports = function(grunt){
 'use strict';
 
-module.exports = function(grunt){
   var files = {
     src: 'config/*.js',
     tests: 'test/*.js'
