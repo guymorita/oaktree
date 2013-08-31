@@ -175,36 +175,69 @@ Hatchlings.newImage = function(req, res) {
   };
 
 Hatchlings.retrieveMessages = function(req, res) {
-    var user_id = req.params.user_id;
-    var allMessages = {};
-    var query = {
-      receiver_id: user_id,
-      cleared: false
-    };
-    db.Message.find(query, function(err, incoming) {
-      if(err) {
-        console.log('Retrieving inbox error for '+ user_id +':'+ err);
-        res.send(500, 'Failed to retrieve mailbox, please try again.');
-      } else if(incoming) {
-        allMessages.inbox = Helpers.sortMessages(incoming.slice());
-
-        var query = {
-          sender_id: user_id,
-          cleared: false
-        };
-        db.Message.find(query, function(err, outgoing) {
-          if(err) { console.log('Retrieving outbox error for '+ user_id +':'+ err); }
-          if(outgoing) {
-            allMessages.outbox = Helpers.sortMessages(outgoing.slice());
-            res.send(200, allMessages);
-          }
-        });
-      } else {
-        console.log('Did not find a mailbox for user id:', user_id);
-        res.send(400, 'No mailbox exists for this user.');
-      }
-    });
+  var user_id = req.params.user_id;
+  var allMessages = {};
+  var query = {
+    receiver_id: user_id,
+    receiver_cleared: false
   };
+  db.Message.find(query, function(err, incoming) {
+    if(err) {
+      console.log('Retrieving inbox error for '+ user_id +':'+ err);
+      res.send(500, 'Failed to retrieve mailbox, please try again.');
+    } else if(incoming) {
+      allMessages.inbox = Helpers.sortMessages(incoming.slice());
+
+      var query2 = {
+        sender_id: user_id,
+        sender_cleared: false
+      };
+      db.Message.find(query2, function(err, outgoing) {
+        if(err) { console.log('Retrieving outbox error for '+ user_id +':'+ err); }
+        if(outgoing) {
+          allMessages.outbox = Helpers.sortMessages(outgoing.slice());
+          res.send(200, allMessages);
+        }
+      });
+    } else {
+      console.log('Did not find a mailbox for user id:', user_id);
+      res.send(400, 'No mailbox exists for this user.');
+    }
+  });
+};
+
+Hatchlings.clearMessages = function(req, res) {
+  console.log('clear called');
+  var user_id = req.params.user_id;
+
+  var query = {
+    receiver_id: user_id,
+    status: 1,
+    receiver_cleared: false
+  };
+
+  db.Message.update(query, {$set: {receiver_cleared: true}}, {multi: true}, function(err, count) {
+    if(err) {
+      console.log('Clear inbox error:', err);
+    } else {
+      if(count > 0) { console.log('Cleared '+ count +' messages from inbox for '+ user_id); }
+
+      var query2 = {
+        sender_id: user_id,
+        sender_cleared: false
+      };
+
+      db.Message.update(query2, {$set: {sender_cleared: true}}, {multi: true}, function(err, count) {
+        if(err) {
+          console.log('Clear outbox error:', err);
+        } else {
+          if(count > 0) { console.log('Cleared '+ count +' messages from outbox for '+ user_id); }
+          res.send(201, 'Cleared inbox and outbox for user.');
+        }
+      });
+    }
+  });
+};
 
 Hatchlings.readMessages = function(req, res) {
     var query = { _id: req.params.message_id };

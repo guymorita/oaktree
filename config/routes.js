@@ -20,6 +20,7 @@ module.exports = function(server) {
   server.post('/message', Messages.newMessage);
   server.get('/message/PRISM', Messages.showMessages);
   server.get('/message/retrieve/:user_id', Messages.retrieveMessages);
+  server.get('/message/clear/:user_id', Messages.clearMessages);
   server.get('/message/read/:message_id', Messages.readMessages);
   server.post('/image', Messages.newImage);
 

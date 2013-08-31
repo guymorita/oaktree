@@ -8,6 +8,7 @@ var oaktree = require('../app.js');
 
 var request = require('supertest');
 
+
 describe('New user creation', function(){
   var f0 = {
     username: 'hatch',
@@ -230,9 +231,10 @@ describe('Sent messages', function(){
         done();
       });
   });
-  it('should not be cleared', function(done){
+  it('should not be cleared when sent', function(done){
       oaktree.Message.findOne({_id: message_id }, function(err, item) {
-        assert.equal(item.cleared, false);
+        assert.equal(item.receiver_cleared, false);
+        assert.equal(item.sender_cleared, false);
         done();
       });
   });
@@ -376,7 +378,7 @@ describe('Retrieve messages', function(){
     });
   });
   it('should not retrieve cleared messages.', function(done){
-    oaktree.Message.update({_id: messageRes[0]}, {$set: {cleared: true}}, function(err, count) {
+    oaktree.Message.update({_id: messageRes[0]}, {$set: {receiver_cleared: true}}, function(err, count) {
       if(count === 1) {
         request(oaktree.server).get('/message/retrieve/555')
             .end(function(err, res){
@@ -478,6 +480,150 @@ describe('Read messages', function(){
         expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
         done();
       });
+  });
+});
+
+describe('Clear messages', function(){
+  this.timeout(15000);
+  var message0 = {
+    sender_id: 132,
+    sender_name: 'Guy',
+    deviceToken: '11',
+    receiver_ids: [555],
+    title: 'herro',
+    content: 'world',
+    latlng: {
+      lat: 132,
+      lng: -54
+    }
+  };
+  var message1 = {
+    sender_id: 666,
+    sender_name: 'Al',
+    deviceToken: '12121',
+    receiver_ids: [555],
+    title: 'sup dude',
+    content: 'you know how it is',
+    latlng: {
+      lat: 23,
+      lng: -84
+    }
+  };
+  var message2 = {
+    sender_id: 111,
+    sender_name: 'Savannah',
+    deviceToken: '121',
+    receiver_ids: [5],
+    title: 'not for 555',
+    content: 'test',
+    latlng: {
+      lat: 58,
+      lng: -82
+    }
+  };
+  var message3 = {
+    sender_id: 111,
+    sender_name: 'Savannah',
+    deviceToken: '121',
+    receiver_ids: [555, 777],
+    title: 'super duper',
+    content: 'test',
+    latlng: {
+      lat: 58,
+      lng: -82
+    }
+  };
+  var message4 = {
+    sender_id: 555,
+    sender_name: 'tester',
+    deviceToken: '121',
+    receiver_ids: [777],
+    title: 'super duper',
+    content: 'to 777',
+    latlng: {
+      lat: 58,
+      lng: -82
+    }
+  };
+  var message5 = {
+    sender_id: 555,
+    sender_name: 'tester',
+    deviceToken: '121',
+    receiver_ids: [777, 111],
+    title: 'super duper',
+    content: 'to savannah and 777',
+    latlng: {
+      lat: 58,
+      lng: -82
+    }
+  };
+
+  var messageArray = [message0, message1, message2, message3, message4, message5];
+  var messageRes = [];
+  beforeEach(function(done){
+    oaktree.Message.remove({}, function(){
+      messageRes = [];
+      async.eachSeries(messageArray,
+        function(message, callback){
+          request(oaktree.server)
+            .post('/message/')
+            .set('content-type', 'application/json')
+            .send(JSON.stringify(message))
+            .end(function(err, res){
+              messageRes.push(JSON.parse(res.res.text)[0]._id);
+              callback();
+            });
+        },
+        function(err){
+          done();
+        });
+    });
+  });
+  it('should clear read messages only.', function(done){
+    request(oaktree.server).get('/message/read/' + messageRes[0])
+      .end(function(err, res){
+        if(!err) {
+          request(oaktree.server).get('/message/clear/555')
+              .end(function(err, res){
+                console.log(res.body);
+
+                request(oaktree.server).get('/message/retrieve/555')
+                    .end(function(err, res){
+                      expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
+                      assert.notEqual(JSON.parse(res.res.text).inbox[0]._id, messageRes[0]);
+                      assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[0]);
+                      assert.notEqual(JSON.parse(res.res.text).inbox[0]._id, messageRes[2]);
+                      assert.notEqual(JSON.parse(res.res.text).inbox[1]._id, messageRes[2]);
+                      assert.equal(JSON.parse(res.res.text).inbox[0].receiver_id, '555');
+                      assert.equal(JSON.parse(res.res.text).inbox[1].receiver_id, '555');
+                      done();
+                    });
+              });
+        }
+      });
+  });
+  it('should clear all sent messages.', function(done){
+    request(oaktree.server).get('/message/retrieve/555')
+        .end(function(err, res){
+          expect(JSON.parse(res.res.text).outbox.length).to.eql(3);
+          expect(JSON.parse(res.res.text).inbox.length).to.eql(3);
+
+          request(oaktree.server).get('/message/clear/555')
+            .end(function(err, res){
+
+              request(oaktree.server).get('/message/retrieve/555')
+                  .end(function(err, res){
+                    expect(JSON.parse(res.res.text).outbox.length).to.eql(0);
+                    expect(JSON.parse(res.res.text).inbox.length).to.eql(3);
+
+                    request(oaktree.server).get('/message/retrieve/777')
+                        .end(function(err, res2){
+                          expect(JSON.parse(res2.res.text).inbox.length).to.eql(3);
+                          done();
+                        });
+                  });
+            });
+        });
   });
 });
 

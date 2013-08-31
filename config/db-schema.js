@@ -24,7 +24,8 @@ exports.mongodb = function(){
     pic_url: String,
     hidden: { type: Boolean, default: false },
     status: { type: Number, default: 0 },
-    cleared: { type: Boolean, default: false },
+    sender_cleared: { type: Boolean, default: false },
+    receiver_cleared: { type: Boolean, default: false },
     date: { type: Date, default: Date.now }
   });
 
