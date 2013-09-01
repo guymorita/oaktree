@@ -16,6 +16,7 @@ module.exports = function(server) {
   server.post('/user/login', Users.loginUser);
   server.get('/user/token/:user_id/:deviceToken', Users.setUserToken);
   server.post('/user/phonefind', Users.phoneFind);
+  server.get('/user/confirm/:user_id/:confirm_code', Users.confirmUser);
 
   server.post('/message', Messages.newMessage);
   server.get('/message/PRISM', Messages.showMessages);

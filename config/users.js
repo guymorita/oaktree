@@ -133,20 +133,55 @@ Hatchers.setUserToken = function(req, res) {
   var user_id = req.params.user_id;
   var tokenProperty = { deviceToken: req.params.deviceToken };
 
-  db.User.update({_id:user_id}, {$set: tokenProperty }, function(err, count) {
-    if(err) {
-      console.log('Token update db error:', err);
-      res.send(500, 'Could not update token, please try again.');
-    } else if(count === 1) {
-      console.log('Updated token for user '+ user_id);
-      res.send(201, 'Token updated.');
-    } else {
-      console.log('Supplied user_id ('+ user_id +') does not exist.');
-      res.send(400, 'Could not update token, please try again.');
-    }
-  });
+  if(user_id.length === 24 && tokenProperty.deviceToken.length === 64) {
+    db.User.update({_id:user_id}, {$set: tokenProperty }, function(err, count) {
+      if(err) {
+        console.log('Token update db error:', err);
+        res.send(500, 'Could not update token, please try again.');
+      } else if(count === 1) {
+        console.log('Updated token for user '+ user_id);
+        res.send(201, 'Token updated.');
+      } else {
+        console.log('Supplied user_id ('+ user_id +') does not exist.');
+        res.send(400, 'Could not update token, please try again.');
+      }
+    });
+  } else {
+    res.send(400, 'Invalid device token format, please try again.');
+  }
 };
 
 Hatchers.confirmUser = function(req, res) {
+  var user_id = req.params.user_id;
+  var code = req.params.confirm_code;
 
+  if(user_id.length === 24 && parseInt(code, 10) > 999 && parseInt(code, 10) < 10000) {
+    db.User.findOne({_id:user_id}, function(err, user) {
+      if(err) {
+        console.log('Confirm user lookup db error:', err);
+        res.send(500, 'Could not confirm your phone number at this moment, please try again.');
+      } else if(user) {
+        if(code.toString() === user.confirm_code.toString()) {
+          var confirmed = {confirm_code: 'confirmed'};
+          db.User.update({_id:user_id}, {$set: confirmed}, function(err, count) {
+            if(err) {
+              console.log('User confirm status update error:', err);
+              res.send(500, 'Could not confirm your phone number at this moment, please try again.');
+            } else if(count === 1) {
+              console.log(user.username +' has confirmed his/her phone number.');
+              res.send(201, 'Your phone number has been confirmed, thank you.');
+            } else {
+              console.log('Supplied user_id ('+ user_id +') does not exist.');
+              res.send(500, 'Could not confirm your phone number at this moment, please try again.');
+            }
+          });
+        }
+      } else {
+        console.log('Could not find user '+ user_id +' to confirm phone number.');
+        res.send(400, 'Could not confirm your phone number at this moment, please try again.');
+      }
+    });
+  } else {
+    res.send(400, 'Invalid confirmation format, please try again.');
+  }
 };
