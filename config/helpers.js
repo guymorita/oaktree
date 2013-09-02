@@ -90,27 +90,6 @@ Helpers.updateSenderReceiver = function(sender_id, senderObj, receiver_id, recei
   });
 };
 
-Array.prototype.reverse = function(){
-if(Array.isArray(this)) {
-  var swap, len = this.length;
-  for(var i=0; i<Math.floor(len/2); i++){
-    swap = this[i];
-    this[i] = this[len-1-i];
-    this[len-1-i] = swap;
-  }
-  return this;
-} else {
-  console.log("Not an array.");
-}
-};
-
-Helpers.sortMessages = function(messages) {
-  _.sortBy(messages, function(msg){
-    return msg.date;
-  });
-  return messages.reverse();
-};
-
 Helpers.firePush = function(token, body, sender){
   sender = sender || "Hatch";
   var device = new apn.Device(token);

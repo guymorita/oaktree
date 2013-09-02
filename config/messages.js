@@ -186,21 +186,21 @@ Hatchlings.retrieveMessages = function(req, res) {
     receiver_id: user_id,
     receiver_cleared: false
   };
-  db.Message.find(query, function(err, incoming) {
+  db.Message.find(query, null, {sort: {date: -1}}, function(err, incoming) {
     if(err) {
       console.log('Retrieving inbox error for '+ user_id +':'+ err);
       res.send(500, 'Failed to retrieve mailbox, please try again.');
     } else if(incoming) {
-      allMessages.inbox = Helpers.sortMessages(incoming.slice());
+      allMessages.inbox = incoming;
 
       var query2 = {
         sender_id: user_id,
         sender_cleared: false
       };
-      db.Message.find(query2, function(err, outgoing) {
+      db.Message.find(query2, null, {sort: {date: -1}}, function(err, outgoing) {
         if(err) { console.log('Retrieving outbox error for '+ user_id +':'+ err); }
         if(outgoing) {
-          allMessages.outbox = Helpers.sortMessages(outgoing.slice());
+          allMessages.outbox = outgoing;
           res.send(200, allMessages);
         }
       });
