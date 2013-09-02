@@ -3,7 +3,7 @@ module.exports = function(grunt){
 
   var files = {
     src: 'config/*.js',
-    tests: 'test/*.js'
+    tests: 'test/testOaktree.js'
   };
 
   grunt.initConfig({

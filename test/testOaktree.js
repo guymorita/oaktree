@@ -22,21 +22,27 @@ describe('New user creation', function(){
     username: 'guy',
     password: 'guy'
   };
+  var f3 = {
+    username: 'al',
+    password: 'al'
+  };
+
   var user0 = {
     username: 'bob',
     password: 'bobpass'
   };
 
-  var usersArray = [f0, f1, f2];
+  var usersArray = [f0, f1, f2, f3];
   var userIds = [];
 
   beforeEach(function(done){
     userIds = [];
     oaktree.User.remove({}, function(){
-      oaktree.User.create(usersArray, function(err, f0, f1, f2) {
+      oaktree.User.create(usersArray, function(err, f0, f1, f2, f3) {
         userIds.push(f0._id);
         userIds.push(f1._id);
         userIds.push(f2._id);
+        userIds.push(f3._id);
 
         request(oaktree.server)
           .post('/user/new/')
@@ -95,7 +101,7 @@ describe('New user creation', function(){
         done();
     });
   });
-  it('should automatically friend the user to svnh, guy, and hatch', function(done){
+  it('should automatically friend the user to svnh, guy, and al', function(done){
     var tomasUser = {
       username: 'tomas',
       password: 'capncruch'
@@ -119,7 +125,7 @@ describe('New user creation', function(){
             assert.equal(friends[2].status, '2');
             done();
           });
-      }, 800);
+      }, 600);
     });
   });
 });
@@ -261,7 +267,7 @@ describe('User login', function(){
   });
 });
 
-/*
+
 describe('Sent messages', function(){
   var message = {
     sender_id: 666,
@@ -351,7 +357,7 @@ describe('Sent messages', function(){
             });
         });
       });
-    }, 500);
+    }, 600);
   });
 });
 
@@ -663,8 +669,6 @@ describe('Clear messages', function(){
         if(!err) {
           request(oaktree.server).get('/message/clear/555')
               .end(function(err, res){
-                console.log(res.body);
-
                 request(oaktree.server).get('/message/retrieve/555')
                     .end(function(err, res){
                       expect(JSON.parse(res.res.text).inbox.length).to.eql(2);
@@ -1016,7 +1020,7 @@ describe('Phone contacts find', function(){
       });
   });
 });
-*/
+
 // var deferred = Q.defer();
 // request({
 //   method: 'GET',
