@@ -10,6 +10,7 @@ var request = require('supertest');
 
 
 describe('New user creation', function(){
+  this.timeout(15000);
   var f0 = {
     username: 'hatch',
     password: 'hatchpass'
