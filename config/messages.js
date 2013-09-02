@@ -212,7 +212,6 @@ Hatchlings.retrieveMessages = function(req, res) {
 };
 
 Hatchlings.clearMessages = function(req, res) {
-  console.log('clear called');
   var user_id = req.params.user_id;
 
   var query = {
@@ -224,6 +223,7 @@ Hatchlings.clearMessages = function(req, res) {
   db.Message.update(query, {$set: {receiver_cleared: true}}, {multi: true}, function(err, count) {
     if(err) {
       console.log('Clear inbox error:', err);
+      res.send(500, 'Unable to clear messages, please try again.');
     } else {
       if(count > 0) { console.log('Cleared '+ count +' messages from inbox for '+ user_id); }
 
@@ -235,6 +235,7 @@ Hatchlings.clearMessages = function(req, res) {
       db.Message.update(query2, {$set: {sender_cleared: true}}, {multi: true}, function(err, count) {
         if(err) {
           console.log('Clear outbox error:', err);
+          res.send(500, 'Cleared inbox, but could not clear outbox. Please try again.');
         } else {
           if(count > 0) { console.log('Cleared '+ count +' messages from outbox for '+ user_id); }
           res.send(201, 'Cleared inbox and outbox for user.');

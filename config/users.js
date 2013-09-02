@@ -21,7 +21,6 @@ Hatchers.listUsers = function(req, res) {
 };
 
 Hatchers.phoneFind = function(req, res) {
-  console.log('phonefind called');
   if(req.body.contacts && req.body.contacts.length > 0) {
     var cleanedNumbers = [];
     _.each(req.body.contacts, function(contact){
@@ -48,7 +47,7 @@ Hatchers.phoneFind = function(req, res) {
       }
     });
   } else {
-    res.send(400);
+    res.send(400, 'Contacts were not passed in a valid format.');
   }
 };
 
@@ -98,7 +97,6 @@ Hatchers.newUser = function(req, res) {
 };
 
 Hatchers.loginUser = function(req, res) {
-
   var uname = (req.body.username).toLowerCase();
   var upass = req.body.password;
 

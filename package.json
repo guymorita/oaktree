@@ -1,8 +1,9 @@
 {
-  "name": "oaktree",
-  "version": "0.1.1-63",
+  "name": "Oaktree",
+  "version": "0.1.1-70",
   "engine": "node >= 0.8.x",
-  "description": "home for squirrels",
+  "description": "Server for Hatch",
+  "private": true,
   "dependencies": {
     "async": "*",
     "mongoose": "*",
@@ -42,6 +43,6 @@
   },
   "subdomain": "oaktree",
   "engines": {
-    "node": "0.10.x"
+    "node": "0.8.x"
   }
 }
