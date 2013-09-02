@@ -1,7 +1,7 @@
 //sign in using laura, she receives all of the messages
 
 var async = require('async');
-var oaktree = require('../app.js');
+var oaktree = require('./app.js');
 var request = require('supertest');
 
 //dummy data to populate for demo
@@ -73,32 +73,48 @@ var founderIds = [];
 var userArray = [user0, user1, user2, user3, user4, user5, user6];
 var userIds = [];
 
-oaktree.User.remove({}, function(){
-  oaktree.User.create(founderArray, function(err, f0, f1, f2, f3) {
-    founderIds.push(f0._id);
-    founderIds.push(f1._id);
-    founderIds.push(f2._id);
-    founderIds.push(f3._id);
+oaktree.Message.remove({}, function(){
+  oaktree.User.remove({}, function(){
+    oaktree.User.create(founderArray, function(err, f0, f1, f2, f3) {
+      founderIds.push(f0._id);
+      founderIds.push(f1._id);
+      founderIds.push(f2._id);
+      founderIds.push(f3._id);
 
-  async.eachSeries(userArray,
-    function(userObj, callback){
-      request(oaktree.server)
-        .post('/user/new/')
-        .set('content-type', 'application/json')
-        .send(JSON.stringify(userObj))
-        .end(function(err, res){
-          userIds.push(JSON.parse(res.res.text)._id);
-          callback();
-        });
-    },
-    function(err){
-      console.log('Created demo users.');
-      createMessages(userIds);
+    async.eachSeries(userArray,
+      function(userObj, callback){
+        request(oaktree.server)
+          .post('/user/new/')
+          .set('content-type', 'application/json')
+          .send(JSON.stringify(userObj))
+          .end(function(err, res){
+            userIds.push(JSON.parse(res.res.text)._id);
+            callback();
+          });
+      },
+      function(err){
+        console.log('Created demo users.');
+        setTimeout(function(){
+          createMessages(userIds);
+        }, 5000);
+      });
     });
   });
 });
 
 var createMessages = function(userIds){
+  request(oaktree.server)
+    .get('/friends/add/'+ userIds[0] +'/'+ userIds[2])
+    .end(function(err,res){
+    request(oaktree.server)
+        .get('/friends/accept/'+ userIds[0] +'/'+ userIds[2])
+        .end(function(err,res){
+          console.log('bob and laura are now friends.');
+        });
+    });
+
+
+
   var message0 = {
     sender_id: founderIds[1],
     sender_name: 'Savannah',
@@ -124,15 +140,15 @@ var createMessages = function(userIds){
     }
   };
   var message2 = {
-    sender_id: founderIds[0],
+    sender_id: founderIds[2],
     sender_name: 'Guy',
     deviceToken: '121',
     receiver_ids: [userIds[2]],
     title: 'shalom princess',
     content: 'wassup',
     latlng: {
-      lat: 58,
-      lng: -82
+      lat: 37.784283,
+      lng: -122.474138
     }
   };
   var message3 = {
@@ -191,8 +207,8 @@ var createMessages = function(userIds){
     title: 'enjoy',
     content: 'this gift I bought you',
     latlng: {
-      lat: 37.783079,
-      lng: -122.414142
+      lat: 37.803613,
+      lng: -122.414689
     }
   };
   var message8 = {
@@ -237,35 +253,33 @@ var createMessages = function(userIds){
     deviceToken: '121',
     receiver_ids: [userIds[2]],
     title: "ha! remember when we..",
-    content: 'broke in that building here?',
+    content: 'broke in that building and ate a bunch of cereal?',
     latlng: {
-      lat: 37.786470,
-      lng: -122.414979
+      lat: 37.783812,
+      lng: -122.408946
     }
   };
 
 
   var messageArray = [message0, message1, message2, message3, message4, message5, message6, message7, message8, message9, message10, message11];
   var messageIds = [];
-  oaktree.Message.remove({}, function(){
-    messageIds = [];
-    async.eachSeries(messageArray,
-      function(message, callback){
-        request(oaktree.server)
-          .post('/message/')
-          .set('content-type', 'application/json')
-          .send(JSON.stringify(message))
-          .end(function(err, res){
-            messageIds.push(JSON.parse(res.res.text)[0]._id);
-            callback();
-          });
-      },
-      function(err){
-        if (err){
-          console.log('error in populating dummy msgs:', err);
-        } else {
-          console.log('Created demo messages');
-        }
-      });
-  });
+  async.eachSeries(messageArray,
+    function(message, callback){
+      request(oaktree.server)
+        .post('/message/')
+        .set('content-type', 'application/json')
+        .send(JSON.stringify(message))
+        .end(function(err, res){
+          messageIds.push(JSON.parse(res.res.text)[0]._id);
+          callback();
+        });
+    },
+    function(err){
+      if (err){
+        console.log('error in populating dummy msgs:', err);
+      } else {
+        console.log('Created demo messages');
+      }
+    }
+  );
 };
