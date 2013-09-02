@@ -1,10 +1,13 @@
 //sign in using laura, she receives all of the messages
 
 var async = require('async');
-var oaktree = require('./app.js');
+var oaktree = require('../app.js');
 var request = require('supertest');
 
 //dummy data to populate for demo
+
+
+// founders (need to insert first so auto-add won't complain)
 var f0 = {
   username: 'hatch',
   password: 'hatchpass',
@@ -20,6 +23,14 @@ var f2 = {
   password: 'guy',
   phone: '19023948372'
 };
+var f3 = {
+  username: 'al',
+  password: 'qwertypass',
+  phone: '19023948372'
+};
+
+
+// regular users
 var user0 = {
   username: 'bob',
   password: 'bobpass',
@@ -36,25 +47,40 @@ var user2 = {
   password: 'laurapass',
   phone: '18496323933'
 };
-
 var user3 = {
   username: 'sally',
   password: 'sallypass',
   phone: '12183920901'
 };
+var user4 = {
+  username: 'tuhin',
+  password: 'cerealisgood',
+  phone: '1-510-555-1212'
+};
+var user5 = {
+  username: 'maxwell',
+  password: 'bitwiseforever',
+  phone: '1(707)555-1212'
+};
+var user6 = {
+  username: 'haoliu',
+  password: 'prelinked',
+  phone: '15104951212'
+};
 
-var defaultUsrArray = [f0, f1, f2];
-var usersArray = [user0, user1, user2, user3];
+var founderArray = [f0, f1, f2, f3];
+var founderIds = [];
+var userArray = [user0, user1, user2, user3, user4, user5, user6];
 var userIds = [];
 
-userIds = [];
 oaktree.User.remove({}, function(){
-  oaktree.User.create(defaultUsrArray, function(err, f0, f1, f2) {
-    userIds.push(f0._id);
-    userIds.push(f1._id);
-    userIds.push(f2._id);
+  oaktree.User.create(founderArray, function(err, f0, f1, f2, f3) {
+    founderIds.push(f0._id);
+    founderIds.push(f1._id);
+    founderIds.push(f2._id);
+    founderIds.push(f3._id);
 
-  async.eachSeries(usersArray,
+  async.eachSeries(userArray,
     function(userObj, callback){
       request(oaktree.server)
         .post('/user/new/')
@@ -66,6 +92,7 @@ oaktree.User.remove({}, function(){
         });
     },
     function(err){
+      console.log('Created demo users.');
       createMessages(userIds);
     });
   });
@@ -73,10 +100,10 @@ oaktree.User.remove({}, function(){
 
 var createMessages = function(userIds){
   var message0 = {
-    sender_id: userIds[1],
+    sender_id: founderIds[1],
     sender_name: 'Savannah',
     deviceToken: '11',
-    receiver_ids: [userIds[5]],
+    receiver_ids: [userIds[2]],
     title: 'hey, hey, hey!',
     content: 'world',
     latlng: {
@@ -85,10 +112,10 @@ var createMessages = function(userIds){
     }
   };
   var message1 = {
-    sender_id: userIds[1],
+    sender_id: founderIds[1],
     sender_name: 'Savannah',
     deviceToken: '12121',
-    receiver_ids: [userIds[5]],
+    receiver_ids: [userIds[2]],
     title: 'sup dude',
     content: 'you know how it is',
     latlng: {
@@ -97,10 +124,10 @@ var createMessages = function(userIds){
     }
   };
   var message2 = {
-    sender_id: userIds[0],
+    sender_id: founderIds[0],
     sender_name: 'Guy',
     deviceToken: '121',
-    receiver_ids: [userIds[5]],
+    receiver_ids: [userIds[2]],
     title: 'shalom princess',
     content: 'wassup',
     latlng: {
@@ -109,10 +136,10 @@ var createMessages = function(userIds){
     }
   };
   var message3 = {
-    sender_id: userIds[0],
+    sender_id: founderIds[0],
     sender_name: 'Guy',
     deviceToken: '121',
-    receiver_ids: [userIds[5]],
+    receiver_ids: [userIds[2]],
     title: 'lol look at this!!!!',
     content: 'super funny pic',
     latlng: {
@@ -121,10 +148,10 @@ var createMessages = function(userIds){
     }
   };
   var message4 = {
-    sender_id: userIds[5],
+    sender_id: userIds[2],
     sender_name: 'Laura',
     deviceToken: '121',
-    receiver_ids: [userIds[0]],
+    receiver_ids: [userIds[1]],
     title: 'have fun at the gym!',
     content: 'wahhoooo',
     latlng: {
@@ -133,10 +160,10 @@ var createMessages = function(userIds){
     }
   };
   var message5 = {
-    sender_id: userIds[5],
+    sender_id: userIds[2],
     sender_name: 'Laura',
     deviceToken: '121',
-    receiver_ids: [userIds[0]],
+    receiver_ids: [userIds[1]],
     title: 'hope you enjoy this',
     content: 'check it out',
     latlng: {
@@ -145,10 +172,10 @@ var createMessages = function(userIds){
     }
   };
   var message6 = {
-    sender_id: userIds[1],
+    sender_id: founderIds[1],
     sender_name: 'Savannah',
     deviceToken: '121',
-    receiver_ids: [userIds[5]],
+    receiver_ids: [userIds[2]],
     title: 'have a nice day',
     content: 'in the city',
     latlng: {
@@ -157,10 +184,10 @@ var createMessages = function(userIds){
     }
   };
   var message7 = {
-    sender_id: userIds[0],
+    sender_id: founderIds[2],
     sender_name: 'Guy',
     deviceToken: '121',
-    receiver_ids: [userIds[5]],
+    receiver_ids: [userIds[2]],
     title: 'enjoy',
     content: 'this gift I bought you',
     latlng: {
@@ -169,11 +196,11 @@ var createMessages = function(userIds){
     }
   };
   var message8 = {
-    sender_id: userIds[1],
+    sender_id: founderIds[1],
     sender_name: 'Savannah',
     deviceToken: '121',
-    receiver_ids: [userIds[5]],
-    title: 'don\'t forget to buy this at the store',
+    receiver_ids: [userIds[2]],
+    title: "don't forget to buy this at the store",
     content: 'milk',
     latlng: {
       lat: 37.783085,
@@ -181,10 +208,10 @@ var createMessages = function(userIds){
     }
   };
   var message9 = {
-    sender_id: userIds[5],
+    sender_id: userIds[2],
     sender_name: 'Laura',
     deviceToken: '121',
-    receiver_ids: [userIds[1]],
+    receiver_ids: [founderIds[1]],
     title: 'so excited to see you here',
     content: 'at the zoo',
     latlng: {
@@ -193,7 +220,7 @@ var createMessages = function(userIds){
     }
   };
   var message10 = {
-    sender_id: userIds[5],
+    sender_id: userIds[2],
     sender_name: 'Laura',
     deviceToken: '121',
     receiver_ids: [userIds[0]],
@@ -204,12 +231,24 @@ var createMessages = function(userIds){
       lng: -122.2490
     }
   };
+  var message11 = {
+    sender_id: founderIds[3],
+    sender_name: 'al',
+    deviceToken: '121',
+    receiver_ids: [userIds[2]],
+    title: "ha! remember when we..",
+    content: 'broke in that building here?',
+    latlng: {
+      lat: 37.786470,
+      lng: -122.414979
+    }
+  };
 
 
-  var messageArray = [message0, message1, message2, message3, message4, message5, message6, message7, message8, message9, message10];
-  var messageRes = [];
+  var messageArray = [message0, message1, message2, message3, message4, message5, message6, message7, message8, message9, message10, message11];
+  var messageIds = [];
   oaktree.Message.remove({}, function(){
-    messageRes = [];
+    messageIds = [];
     async.eachSeries(messageArray,
       function(message, callback){
         request(oaktree.server)
@@ -217,15 +256,15 @@ var createMessages = function(userIds){
           .set('content-type', 'application/json')
           .send(JSON.stringify(message))
           .end(function(err, res){
-            messageRes.push(JSON.parse(res.res.text)[0]._id);
+            messageIds.push(JSON.parse(res.res.text)[0]._id);
             callback();
           });
       },
       function(err){
         if (err){
-          console.log('error in populating dummy msgs: ', err);
+          console.log('error in populating dummy msgs:', err);
         } else {
-          console.log('populated dummy messages');
+          console.log('Created demo messages');
         }
       });
   });
