@@ -1,6 +1,6 @@
 {
-  "name": "Oaktree",
-  "version": "0.1.1-70",
+  "name": "oaktree",
+  "version": "0.1.1-71",
   "engine": "node >= 0.8.x",
   "description": "Server for Hatch",
   "private": true,
@@ -36,7 +36,7 @@
   "scripts": {
     "test": "grunt test",
     "blanket": {
-      "pattern": "lib",
+      "pattern": "config",
       "data-cover-never": "node_modules"
     },
     "start": "app.js"
