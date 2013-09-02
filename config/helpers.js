@@ -1,3 +1,5 @@
+var apn = require('apn');
+
 var Helpers = module.exports = {};
 
 // adds an object to an array and returns a sorted array by a key (string)

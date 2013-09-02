@@ -1,3 +1,8 @@
+var azure = require('azure');
+var fs = require('fs');
+
+var blobService = azure.createBlobService('squirreleggs','87vFqzuCuRlgVQrfpub/4V5R38tQX/57TA9GrcJFUhVp1tMANbDYsq4KTlUHvJ6P3Ui6HZub+05m+nSk9ZAJ7Q==');
+
 var Helpers = require('./helpers.js');
 var Hatchlings = module.exports = {};
 

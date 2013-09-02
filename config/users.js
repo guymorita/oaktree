@@ -1,3 +1,5 @@
+var pass = require('pwd');
+
 var Helpers = require('./helpers.js');
 var Comrades = require('./friends.js');
 
