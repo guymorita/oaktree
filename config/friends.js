@@ -86,13 +86,14 @@ Comrades.acceptFriend = function(req, res) {
 };
 
 Comrades.forceFriend = function(sender) {
-  var query = {username: {$in: ['svnh','guy','hatch']}};
+  var query = {username: {$in: ['hatch','svnh','guy','al']}};
   db.User.find(query, function(err, founders) {
-    if(err) { console.log('Finding svnh/guy error:', err); }
-    else if(founders && founders.length === 3) {
+    if(err) { console.log('Finding svnh/guy/al error:', err); }
+    else if(founders && founders.length === 4) {
       var svnhObj, svnhSend = {};
       var guyObj, guySend = {};
       var alObj, alSend = {};
+      var hatchObj = {};
       var senderObj = {};
 
       for(var i=0; i<founders.length; i++) {
@@ -101,12 +102,15 @@ Comrades.forceFriend = function(sender) {
         } else if(founders[i].username === 'guy') {
           guyObj = founders[i];
         }
-        else if(founders[i].username === 'hatch') {
+        else if(founders[i].username === 'al') {
           alObj = founders[i];
+        }
+        else if(founders[i].username === 'hatch') {
+          hatchObj = founders[i];
         }
       }
 
-      senderObj.friends = [{_id: svnhObj._id, status: 2, username: 'svnh'},{_id: guyObj._id, status: 2, username: 'guy'},{_id: alObj._id, status: 2, username: 'hatch'}];
+      senderObj.friends = [{_id: svnhObj._id, status: 2, username: 'svnh'},{_id: guyObj._id, status: 2, username: 'guy'},{_id: alObj._id, status: 2, username: 'al'}];
       svnhSend.friends = Helpers.addAndSort({_id: sender._id, status: 2, username: sender.username}, svnhObj.friends, 'username');
       guySend.friends = Helpers.addAndSort({_id: sender._id, status: 2, username: sender.username}, guyObj.friends, 'username');
       alSend.friends = Helpers.addAndSort({_id: sender._id, status: 2, username: sender.username}, alObj.friends, 'username');
@@ -121,12 +125,12 @@ Comrades.forceFriend = function(sender) {
 
           var fakeMessage = {};
           fakeMessage.body = {
-            sender_id: alObj._id,
-            sender_name: "Hatch",
+            sender_id: hatchObj._id,
+            sender_name: 'Hatch',
             receiver_ids: [sender._id],
             title: "Welcome to Hatch!",
             latlng: {"lat":37.783715,"lng":-122.408976},
-            content: "Hi, thanks for signing up! Try adding some friends and dropping some messages. Cheers!"
+            content: "Hi, thanks for signing up! Try finding some for your friends and dropping them notes. Cheers!"
           };
           Hatchlings.newMessage(fakeMessage);
 
