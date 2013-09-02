@@ -31,7 +31,7 @@ Hatchlings.newMessage = function(req, res) {
             if (err) { console.log('Finding receiver ID error', receiver_id); }
             if (receiver && receiver.deviceToken) {
                 // console.log('Message sent push notification for '+ receiver.username +' ('+ receiver.deviceToken +')');
-                firePush(receiver.deviceToken, message.title, message.sender_name);
+                Helpers.firePush(receiver.deviceToken, message.title, message.sender_name);
             }
           });
           sentMessages.push(item);

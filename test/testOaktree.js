@@ -183,7 +183,85 @@ describe('User login', function(){
   });
 });
 
+describe('User login', function(){
+  var user0 = {
+    username: 'bob',
+    password: 'bobpass'
+  };
+  var user1 = {
+    username: 'tom',
+    password: 'tompass'
+  };
+  var bobId, tomId;
+  var fakeToken = '999999935f87c14520fb51bf8f0bdea06f739925cc284b1999999912cc790d2a';
 
+  before(function(done){
+    oaktree.User.remove({}, function() {
+      request(oaktree.server)
+        .post('/user/new/')
+        .set('content-type', 'application/json')
+        .send(JSON.stringify(user0))
+        .end(function(err, res){
+
+            bobId = JSON.parse(res.text)._id;
+            request(oaktree.server)
+              .post('/user/new/')
+              .set('content-type', 'application/json')
+              .send(JSON.stringify(user1))
+              .end(function(err, res){
+                tomId = JSON.parse(res.text)._id;
+                done();
+              });
+        });
+    });
+  });
+  it('should return status code 400 when a user ID is invalid', function(done){
+    request(oaktree.server)
+      .get('/user/token/'+ '12345' +'/'+ fakeToken)
+      .set('content-type', 'application/json')
+      .end(function(err, res){
+        assert.equal(res.statusCode, '400');
+        done();
+    });
+  });
+  it('should return status code 400 when a device token is invalid', function(done){
+    request(oaktree.server)
+      .get('/user/token/'+ bobId +'/'+ '123456')
+      .set('content-type', 'application/json')
+      .end(function(err, res){
+        assert.equal(res.statusCode, '400');
+        done();
+    });
+  });
+  it('should return status code 201 when the user ID and device token are valid and the user is updated.', function(done){
+    request(oaktree.server)
+      .get('/user/token/'+ bobId +'/'+ fakeToken)
+      .set('content-type', 'application/json')
+      .end(function(err, res){
+        assert.equal(res.statusCode, '201');
+        done();
+      });
+  });
+  it('should properly set the device token to the user.', function(done){
+    var user0 = {
+      username: 'bob',
+      password: 'bobpass'
+    };
+
+    request(oaktree.server)
+        .post('/user/login')
+        .set('content-type', 'application/json')
+        .send(JSON.stringify(user0))
+        .end(function(err, res){
+          var user = res.body;
+          assert.equal(user.username, 'bob');
+          assert.equal(user.deviceToken, fakeToken);
+          done();
+        });
+  });
+});
+
+/*
 describe('Sent messages', function(){
   var message = {
     sender_id: 666,
@@ -938,7 +1016,7 @@ describe('Phone contacts find', function(){
       });
   });
 });
-
+*/
 // var deferred = Q.defer();
 // request({
 //   method: 'GET',
