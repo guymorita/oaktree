@@ -1,6 +1,8 @@
 # Oaktree #
+[![Build Status](https://travis-ci.org/guymorita/oaktree.png?branch=master)](https://travis-ci.org/guymorita/oaktree)
+
 ### Hatch Server ###
-The backend for Hatch. Users authenticate on Oaktree and retrieve their information upon login. Messages are sent to Oaktree and routed to other users. Push notifications are also fired from Oaktree.   
+The backend for [Hatch](https://github.com/guymorita/hatch/). Users authenticate on Oaktree and retrieve their information upon login. Messages are sent to Oaktree and routed to other users. Push notifications are also fired from Oaktree to recipients.
 
 ![screenshot](https://raw.github.com/guymorita/oaktree/screenshot/oaktree-screenshot.png)
 
