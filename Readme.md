@@ -1,6 +1,10 @@
 # Oaktree #
 ### Hatch Server ###
-The backend for Hatch. Users authenticate on Oaktree and retrieve their information upon login. Messages are sent to Oaktree and routed to other users. Push notifications are also fired from Oaktree.
+The backend for Hatch. Users authenticate on Oaktree and retrieve their information upon login. Messages are sent to Oaktree and routed to other users. Push notifications are also fired from Oaktree.   
+Getting started:  
+first, clone the repo, then
+>npm install
+
 
 #### Tech Stack ####
 * Node.js / Express - core server
@@ -14,7 +18,7 @@ Hatch utilises the asyncronous non-blocking features of JavaScript and Node.js f
 * [Travis CI](https://travis-ci.org/guymorita/oaktree)
 * Coveralls
 
-For testing, Hatch uses Mocha Chai as a testing suite, automates it with Grunt.js and gets test coverage with Travis-CI/Coveralls.
+Testing is done through the Mocha Chai testing suite, and is automated through Grunt.js. It gets test coverage with Travis-CI/Coveralls.
 
 
 #### Dependencies ####
