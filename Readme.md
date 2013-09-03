@@ -2,6 +2,8 @@
 ### Hatch Server ###
 The backend for Hatch. Users authenticate on Oaktree and retrieve their information upon login. Messages are sent to Oaktree and routed to other users. Push notifications are also fired from Oaktree.   
 
+![screenshot](https://raw.github.com/guymorita/oaktree/screenshot/oaktree-screenshot.png)
+
 #### Tech Stack ####
 * Node.js / Express - core server
 * MongoDB / Mongoose - database
